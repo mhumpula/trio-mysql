@@ -4,10 +4,7 @@ import trio_mysql
 _mysql = trio_mysql
 from trio_mysql.constants import FIELD_TYPE
 from trio_mysql.tests import base
-from trio_mysql._compat import PY2, long_type
-
-if not PY2:
-    basestring = str
+from trio_mysql._compat import long_type
 
 
 class TestDBAPISet:
@@ -33,13 +30,13 @@ class TestCoreModule:
 
     def test_version(self):
         """Version information sanity."""
-        self.assertTrue(isinstance(_mysql.__version__, basestring))
+        self.assertTrue(isinstance(_mysql.__version__, str))
 
         self.assertTrue(isinstance(_mysql.version_info, tuple))
         self.assertEqual(len(_mysql.version_info), 5)
 
     def test_client_info(self):
-        self.assertTrue(isinstance(_mysql.get_client_info(), basestring))
+        self.assertTrue(isinstance(_mysql.get_client_info(), str))
 
     def test_thread_safe(self):
         self.assertTrue(isinstance(_mysql.thread_safe(), int))
@@ -75,11 +72,11 @@ class TestCoreAPI:
                           #self.conn.dump_debug_info)
 
     def test_charset_name(self):
-        self.assertTrue(isinstance(self.conn.character_set_name(), basestring),
+        self.assertTrue(isinstance(self.conn.character_set_name(), str),
                         "Should return a string.")
 
     def test_host_info(self):
-        assert isinstance(self.conn.get_host_info(), basestring), "should return a string"
+        assert isinstance(self.conn.get_host_info(), str), "should return a string"
 
     def test_proto_info(self):
         self.assertTrue(isinstance(self.conn.get_proto_info(), int),
@@ -87,8 +84,8 @@ class TestCoreAPI:
 
     def test_server_info(self):
         if sys.version_info[0] == 2:
-            self.assertTrue(isinstance(self.conn.get_server_info(), basestring),
+            self.assertTrue(isinstance(self.conn.get_server_info(), str),
                             "Should return an str.")
         else:
-            self.assertTrue(isinstance(self.conn.get_server_info(), basestring),
+            self.assertTrue(isinstance(self.conn.get_server_info(), str),
                             "Should return an str.")

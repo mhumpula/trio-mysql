@@ -3,7 +3,7 @@
 # Error codes:
 # http://dev.mysql.com/doc/refman/5.5/en/error-messages-client.html
 from __future__ import print_function
-from ._compat import PY2, range_type, text_type, str_type, JYTHON, IRONPYTHON
+from ._compat import  range_type, text_type, str_type, JYTHON, IRONPYTHON
 
 import errno
 from functools import partial
@@ -44,9 +44,7 @@ DEBUG = False
 
 _py_version = sys.version_info[:2]
 
-if PY2:
-    pass
-elif _py_version < (3, 6):
+if _py_version < (3, 6):
     # See http://bugs.python.org/issue24870
     _surrogateescape_table = [chr(i) if i < 0x80 else chr(i + 0xdc00) for i in range(256)]
 
@@ -59,17 +57,9 @@ else:
 # socket.makefile() in Python 2 is not usable because very inefficient and
 # bad behavior about timeout.
 # XXX: ._socketio doesn't work under IronPython.
-if PY2 and not IRONPYTHON:
-    # read method of file-like returned by sock.makefile() is very slow.
-    # So we copy io-based one from Python 3.
-    from ._socketio import SocketIO
-
-    def _makefile(sock, mode):
-        return io.BufferedReader(SocketIO(sock, mode))
-else:
-    # socket.makefile in Python 3 is nice.
-    def _makefile(sock, mode):
-        return sock.makefile(mode)
+# socket.makefile in Python 3 is nice.
+def _makefile(sock, mode):
+    return sock.makefile(mode)
 
 
 TEXT_TYPES = set([
@@ -276,16 +266,10 @@ class MysqlPacket(object):
         """
         return self._data[position:(position+length)]
 
-    if PY2:
-        def read_uint8(self):
-            result = ord(self._data[self._position])
-            self._position += 1
-            return result
-    else:
-        def read_uint8(self):
-            result = self._data[self._position]
-            self._position += 1
-            return result
+    def read_uint8(self):
+        result = self._data[self._position]
+        self._position += 1
+        return result
 
     def read_uint16(self):
         result = struct.unpack_from('<H', self._data, self._position)[0]
@@ -883,10 +867,7 @@ class Connection(object):
         # if DEBUG:
         #     print("DEBUG: sending query:", sql)
         if isinstance(sql, text_type) and not (JYTHON or IRONPYTHON):
-            if PY2:
-                sql = sql.encode(self.encoding)
-            else:
-                sql = sql.encode(self.encoding, 'surrogateescape')
+            sql = sql.encode(self.encoding, 'surrogateescape')
         self._execute_command(COMMAND.COM_QUERY, sql)
         self._affected_rows = self._read_query_result(unbuffered=unbuffered)
         return self._affected_rows

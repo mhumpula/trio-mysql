@@ -7,8 +7,6 @@
 import sys
 from time import time
 
-PY2 = sys.version_info[0] == 2
-
 class TestDatabase:
 
     db_module = None
@@ -23,10 +21,7 @@ class TestDatabase:
         self.connection = db
         self.cursor = db.cursor()
         self.BLOBText = ''.join([chr(i) for i in range(256)] * 100);
-        if PY2:
-            self.BLOBUText = unicode().join(unichr(i) for i in range(16834))
-        else:
-            self.BLOBUText = "".join(chr(i) for i in range(16834))
+        self.BLOBUText = "".join(chr(i) for i in range(16834))
         data = bytearray(range(256)) * 16
         self.BLOBBinary = self.db_module.Binary(data)
 

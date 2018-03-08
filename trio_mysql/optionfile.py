@@ -1,9 +1,5 @@
-from ._compat import PY2
 
-if PY2:
-    import ConfigParser as configparser
-else:
-    import configparser
+import ConfigParser as configparser
 
 
 class Parser(configparser.RawConfigParser):
