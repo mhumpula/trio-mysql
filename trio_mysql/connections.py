@@ -5,6 +5,7 @@
 from __future__ import print_function
 from ._compat import  JYTHON, IRONPYTHON
 
+import trio
 import errno
 from functools import partial
 import hashlib

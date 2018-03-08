@@ -287,6 +287,32 @@ class Cursor(object):
         self.rownumber = len(self._rows)
         return result
 
+    def __iter__(self):
+        if self._rows is None or self.rownumber:
+            return self
+        return iter(self._rows) # optimization
+
+    def __next__(self):
+        if self._rows is None or self.rownumber >= len(self._rows):
+            raise StopIteration
+        res = self._rows[self.rownumber]
+        self.rownumber += 1
+        return res
+
+    if sys.version_info < (3,5,2):
+        def __aiter__(self):
+            return self
+    else:
+        async def __aiter__(self):
+            return self
+
+    async def __anext__(self):
+        if self._rows is None or self.rownumber >= len(self._rows):
+            raise StopAsyncIteration
+        res = self._rows[self.rownumber]
+        self.rownumber += 1
+        return res
+        
     async def scroll(self, value, mode='relative'):
         self._check_executed()
         if mode == 'relative':
@@ -440,8 +466,7 @@ class SSCursor(Cursor):
     async def fetchall(self):
         """
         Fetch all, as per MySQLdb. Pretty useless for large queries, as
-        it is buffered. See fetchall_unbuffered(), if you want an unbuffered
-        generator version of this method.
+        it is buffered. You should async-iterate over the cursor instead.
         """
         res = []
         async for r in self:
@@ -451,16 +476,13 @@ class SSCursor(Cursor):
     async def fetchall_unbuffered(self):
         """
         Fetch all, implemented as an async iterator. In fact, you can just
-        iterate over the cursor itself, so this is a no-op.
+        iterate over the cursor itself, so this is a no-op. Included for
+        compatibility.
         """
         return self
 
-    if sys.version_info < (3,5,2):
-        def __aiter__(self):
-            return self
-    else:
-        async def __aiter__(self):
-            return self
+    def __iter__(self):
+        raise RuntimeError("You must use 'async for ...' with %s" % repr(type(self)))
 
     async def __anext__(self):
         res = await self.fetchone()
