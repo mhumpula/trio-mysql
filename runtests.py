@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import unittest2
 
-from pymysql._compat import PYPY, JYTHON, IRONPYTHON
+from trio_mysql._compat import PYPY, JYTHON, IRONPYTHON
 
 if not (PYPY or JYTHON or IRONPYTHON):
     import atexit
@@ -23,5 +23,5 @@ if not (PYPY or JYTHON or IRONPYTHON):
                 print("referrer:", ref)
             print('---')
 
-import pymysql.tests
-unittest2.main(pymysql.tests, verbosity=2)
+import trio_mysql.tests
+unittest2.main(trio_mysql.tests, verbosity=2)

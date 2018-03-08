@@ -1,16 +1,16 @@
-from pymysql.tests import base
-import pymysql.cursors
+from trio_mysql.tests import base
+import trio_mysql.cursors
 
 import datetime
 import warnings
 
 
-class TestDictCursor(base.PyMySQLTestCase):
+class TestDictCursor(base.TrioMySQLTestCase):
     bob = {'name': 'bob', 'age': 21, 'DOB': datetime.datetime(1990, 2, 6, 23, 4, 56)}
     jim = {'name': 'jim', 'age': 56, 'DOB': datetime.datetime(1955, 5, 9, 13, 12, 45)}
     fred = {'name': 'fred', 'age': 100, 'DOB': datetime.datetime(1911, 9, 12, 1, 1, 1)}
 
-    cursor_type = pymysql.cursors.DictCursor
+    cursor_type = trio_mysql.cursors.DictCursor
 
     def setUp(self):
         super(TestDictCursor, self).setUp()
@@ -109,7 +109,7 @@ class TestDictCursor(base.PyMySQLTestCase):
 
 
 class TestSSDictCursor(TestDictCursor):
-    cursor_type = pymysql.cursors.SSDictCursor
+    cursor_type = trio_mysql.cursors.SSDictCursor
 
     def _ensure_cursor_expired(self, cursor):
         list(cursor.fetchall_unbuffered())

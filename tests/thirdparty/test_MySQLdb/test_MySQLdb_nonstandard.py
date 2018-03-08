@@ -4,11 +4,11 @@ try:
 except ImportError:
     import unittest
 
-import pymysql
-_mysql = pymysql
-from pymysql.constants import FIELD_TYPE
-from pymysql.tests import base
-from pymysql._compat import PY2, long_type
+import trio_mysql
+_mysql = trio_mysql
+from trio_mysql.constants import FIELD_TYPE
+from trio_mysql.tests import base
+from trio_mysql._compat import PY2, long_type
 
 if not PY2:
     basestring = str
@@ -16,16 +16,16 @@ if not PY2:
 
 class TestDBAPISet(unittest.TestCase):
     def test_set_equality(self):
-        self.assertTrue(pymysql.STRING == pymysql.STRING)
+        self.assertTrue(trio_mysql.STRING == trio_mysql.STRING)
 
     def test_set_inequality(self):
-        self.assertTrue(pymysql.STRING != pymysql.NUMBER)
+        self.assertTrue(trio_mysql.STRING != trio_mysql.NUMBER)
 
     def test_set_equality_membership(self):
-        self.assertTrue(FIELD_TYPE.VAR_STRING == pymysql.STRING)
+        self.assertTrue(FIELD_TYPE.VAR_STRING == trio_mysql.STRING)
 
     def test_set_inequality_membership(self):
-        self.assertTrue(FIELD_TYPE.DATE != pymysql.STRING)
+        self.assertTrue(FIELD_TYPE.DATE != trio_mysql.STRING)
 
 
 class CoreModule(unittest.TestCase):
@@ -53,7 +53,7 @@ class CoreAPI(unittest.TestCase):
     """Test _mysql interaction internals."""
 
     def setUp(self):
-        kwargs = base.PyMySQLTestCase.databases[0].copy()
+        kwargs = base.TrioMySQLTestCase.databases[0].copy()
         kwargs["read_default_file"] = "~/.my.cnf"
         self.conn = _mysql.connect(**kwargs)
 
@@ -75,7 +75,7 @@ class CoreAPI(unittest.TestCase):
 
     #def test_debug(self):
         ## FIXME Only actually tests if you lack SUPER
-        #self.assertRaises(pymysql.OperationalError,
+        #self.assertRaises(trio_mysql.OperationalError,
                           #self.conn.dump_debug_info)
 
     def test_charset_name(self):

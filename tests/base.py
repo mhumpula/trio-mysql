@@ -6,11 +6,11 @@ import warnings
 
 import unittest2
 
-import pymysql
+import trio_mysql
 from .._compat import CPYTHON
 
 
-class PyMySQLTestCase(unittest2.TestCase):
+class TrioMySQLTestCase:
     # You can specify your test environment creating a file named
     #  "databases.json" or editing the `databases` variable below.
     fname = os.path.join(os.path.dirname(__file__), "databases.json")
@@ -20,8 +20,8 @@ class PyMySQLTestCase(unittest2.TestCase):
     else:
         databases = [
             {"host":"localhost","user":"root",
-             "passwd":"","db":"test_pymysql", "use_unicode": True, 'local_infile': True},
-            {"host":"localhost","user":"root","passwd":"","db":"test_pymysql2"}]
+             "passwd":"","db":"test_trio_mysql", "use_unicode": True, 'local_infile': True},
+            {"host":"localhost","user":"root","passwd":"","db":"test_trio_mysql2"}]
 
     def mysql_server_is(self, conn, version_tuple):
         """Return True if the given connection is on the version given or
@@ -43,7 +43,7 @@ class PyMySQLTestCase(unittest2.TestCase):
     def setUp(self):
         self.connections = []
         for params in self.databases:
-            self.connections.append(pymysql.connect(**params))
+            self.connections.append(trio_mysql.connect(**params))
         self.addCleanup(self._teardown_connections)
 
     def _teardown_connections(self):

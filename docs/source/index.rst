@@ -1,5 +1,5 @@
-Welcome to PyMySQL's documentation!
-===================================
+Welcome to Trio-MySQL's documentation!
+======================================
 
 .. toctree::
   :maxdepth: 2

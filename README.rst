@@ -1,30 +1,30 @@
-.. image:: https://readthedocs.org/projects/pymysql/badge/?version=latest
-    :target: http://pymysql.readthedocs.io/en/latest/?badge=latest
+.. image:: https://readthedocs.org/projects/trio_mysql/badge/?version=latest
+    :target: http://trio_mysql.readthedocs.io/en/latest/?badge=latest
     :alt: Documentation Status
 
-.. image:: https://travis-ci.org/PyMySQL/PyMySQL.svg?branch=master
-    :target: https://travis-ci.org/PyMySQL/PyMySQL
+.. image:: https://travis-ci.org/python-trio/trio-mysql.svg?branch=master
+    :target: https://travis-ci.org/python-trio/trio-mysql
 
-.. image:: https://coveralls.io/repos/PyMySQL/PyMySQL/badge.svg?branch=master&service=github
-    :target: https://coveralls.io/github/PyMySQL/PyMySQL?branch=master
+.. image:: https://coveralls.io/repos/python-trio/trio-mysql/badge.svg?branch=master&service=github
+    :target: https://coveralls.io/github/python-trio/trio-mysql?branch=master
 
 .. image:: https://img.shields.io/badge/license-MIT-blue.svg
-    :target: https://github.com/PyMySQL/PyMySQL/blob/master/LICENSE
+    :target: https://github.com/python-trio/trio-mysql/blob/master/LICENSE
 
 
-PyMySQL
-=======
+Trio-MySQL
+==========
 
 .. contents:: Table of Contents
    :local:
 
-This package contains a pure-Python MySQL client library. The goal of PyMySQL
-is to be a drop-in replacement for MySQLdb and work on CPython, PyPy and IronPython.
+This package contains a pure-Python and Trio-enhanced MySQL client library.
+It is a mostly-straightforward clone of PyMySQL, adding async methods
+compatible with the Trio framework.
 
-NOTE: PyMySQL doesn't support low level APIs `_mysql` provides like `data_seek`,
-`store_result`, and `use_result`. You should use high level APIs defined in `PEP 249`_.
-But some APIs like `autocommit` and `ping` are supported because `PEP 249`_ doesn't cover
-their usecase.
+NOTE: Trio-MySQL tries to adhere to (an async version of) the high level
+database APIs defined in `PEP 249`_. Some differences, however, are
+unavoidable.
 
 .. _`PEP 249`: https://www.python.org/dev/peps/pep-0249/
 
@@ -33,9 +33,8 @@ Requirements
 
 * Python -- one of the following:
 
-  - CPython_ >= 2.6 or >= 3.3
-  - PyPy_ >= 4.0
-  - IronPython_ 2.7
+  - CPython_ >= 3.5
+  - PyPy_ >= 5.5
 
 * MySQL Server -- one of the following:
 
@@ -44,7 +43,6 @@ Requirements
 
 .. _CPython: http://www.python.org/
 .. _PyPy: http://pypy.org/
-.. _IronPython: http://ironpython.net/
 .. _MySQL: http://www.mysql.com/
 .. _MariaDB: https://mariadb.org/
 
@@ -54,16 +52,16 @@ Installation
 
 The last stable release is available on PyPI and can be installed with ``pip``::
 
-    $ pip install PyMySQL
+    $ pip install trio_mysql
 
 
 Documentation
 -------------
 
-Documentation is available online: http://pymysql.readthedocs.io/
+Documentation is available online: http://trio_mysql.readthedocs.io/
 
 For support, please refer to the `StackOverflow
-<http://stackoverflow.com/questions/tagged/pymysql>`_.
+<http://stackoverflow.com/questions/tagged/trio_mysql>`_.
 
 Example
 -------
@@ -83,15 +81,15 @@ The following examples make use of a simple table
 
 .. code:: python
 
-    import pymysql.cursors
+    import trio_mysql.cursors
 
     # Connect to the database
-    connection = pymysql.connect(host='localhost',
+    connection = trio_mysql.connect(host='localhost',
                                  user='user',
                                  password='passwd',
                                  db='db',
                                  charset='utf8mb4',
-                                 cursorclass=pymysql.cursors.DictCursor)
+                                 cursorclass=trio_mysql.cursors.DictCursor)
 
     try:
         with connection.cursor() as cursor:
@@ -129,9 +127,9 @@ MySQL Reference Manuals: http://dev.mysql.com/doc/
 MySQL client/server protocol:
 http://dev.mysql.com/doc/internals/en/client-server-protocol.html
 
-PyMySQL mailing list: https://groups.google.com/forum/#!forum/pymysql-users
+Trio chat: https://gitter.im/python-trio/general
 
 License
 -------
 
-PyMySQL is released under the MIT License. See LICENSE for more information.
+Trio-MySQL is released under the MIT License. See LICENSE for more information.

@@ -1,7 +1,7 @@
 User Guide
 ------------
 
-The PyMySQL user guide explains how to install PyMySQL and how to contribute to
+The Trio-MySQL user guide explains how to install Trio-MySQL and how to contribute to
 the library as a developer.
 
 

@@ -1,7 +1,7 @@
 Connection Object
 =================
 
-.. module:: pymysql.connections
+.. module:: trio_mysql.connections
 
 .. autoclass:: Connection
    :members:

@@ -24,15 +24,15 @@ The following examples make use of a simple table
 
 .. code:: python
 
-    import pymysql.cursors
+    import trio_mysql.cursors
 
     # Connect to the database
-    connection = pymysql.connect(host='localhost',
+    connection = trio_mysql.connect(host='localhost',
                                  user='user',
                                  password='passwd',
                                  db='db',
                                  charset='utf8mb4',
-                                 cursorclass=pymysql.cursors.DictCursor)
+                                 cursorclass=trio_mysql.cursors.DictCursor)
 
     try:
         with connection.cursor() as cursor:

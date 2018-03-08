@@ -1,7 +1,8 @@
 """
-PyMySQL: A pure-Python MySQL client library.
+Trio-MySQL: A pure-Python MySQL client library.
 
 Copyright (c) 2010-2016 PyMySQL contributors
+Copyright (c) 2018 Trio-MySQL contributors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -118,7 +119,7 @@ def install_as_MySQLdb():
     After this function is called, any application that imports MySQLdb or
     _mysql will unwittingly actually use
     """
-    sys.modules["MySQLdb"] = sys.modules["_mysql"] = sys.modules["pymysql"]
+    sys.modules["MySQLdb"] = sys.modules["_mysql"] = sys.modules["trio_mysql"]
 
 
 __all__ = [

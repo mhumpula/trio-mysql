@@ -1,6 +1,6 @@
 from . import dbapi20
-import pymysql
-from pymysql.tests import base
+import trio_mysql
+from trio_mysql.tests import base
 
 try:
     import unittest2 as unittest
@@ -9,9 +9,9 @@ except ImportError:
 
 
 class test_MySQLdb(dbapi20.DatabaseAPI20Test):
-    driver = pymysql
+    driver = trio_mysql
     connect_args = ()
-    connect_kw_args = base.PyMySQLTestCase.databases[0].copy()
+    connect_kw_args = base.TrioMySQLTestCase.databases[0].copy()
     connect_kw_args.update(dict(read_default_file='~/.my.cnf',
                                 charset='utf8',
                                 sql_mode="ANSI,STRICT_TRANS_TABLES,TRADITIONAL"))

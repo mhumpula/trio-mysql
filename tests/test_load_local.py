@@ -1,5 +1,5 @@
-from pymysql import cursors, OperationalError, Warning
-from pymysql.tests import base
+from trio_mysql import cursors, OperationalError, Warning
+from trio_mysql.tests import base
 
 import os
 import warnings
@@ -7,7 +7,7 @@ import warnings
 __all__ = ["TestLoadLocal"]
 
 
-class TestLoadLocal(base.PyMySQLTestCase):
+class TestLoadLocal(base.TrioMySQLTestCase):
     def test_no_file(self):
         """Test load local infile when the file does not exist"""
         conn = self.connections[0]

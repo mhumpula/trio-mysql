@@ -1,6 +1,6 @@
 import unittest2
 
-from pymysql import err
+from trio_mysql import err
 
 
 __all__ = ["TestRaiseException"]

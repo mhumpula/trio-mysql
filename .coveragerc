@@ -1,9 +1,9 @@
 [run]
 branch = True
 source =
-    pymysql
-omit = pymysql/tests/*
-       pymysql/tests/thirdparty/test_MySQLdb/*
+    trio_mysql
+omit = trio_mysql/tests/*
+       trio_mysql/tests/thirdparty/test_MySQLdb/*
 
 [report]
 exclude_lines =

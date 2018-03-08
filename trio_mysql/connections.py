@@ -1517,7 +1517,6 @@ class MySQLResult(object):
                 data = packet.read_length_coded_string()
             except IndexError:
                 # No more columns in this row
-                # See https://github.com/PyMySQL/PyMySQL/pull/434
                 break
             if data is not None:
                 if encoding is not None:
@@ -1547,7 +1546,6 @@ class MySQLResult(object):
                     # When SELECT CAST(... AS JSON): charset = connection encoding
                     # This behavior is different from TEXT / BLOB.
                     # We should decode result by connection encoding regardless charsetnr.
-                    # See https://github.com/PyMySQL/PyMySQL/issues/488
                     encoding = conn_encoding  # SELECT CAST(... AS JSON) 
                 elif field_type in TEXT_TYPES:
                     if field.charsetnr == 63:  # binary

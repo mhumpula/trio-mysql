@@ -1,7 +1,7 @@
 Cursor Objects
 ==============
 
-.. module:: pymysql.cursors
+.. module:: trio_mysql.cursors
 
 .. autoclass:: Cursor
    :members:

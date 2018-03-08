@@ -6,16 +6,15 @@ Installation
 
 The last stable release is available on PyPI and can be installed with ``pip``::
 
-    $ pip install PyMySQL
+    $ pip install trio_mysql
 
 Requirements
 -------------
 
 * Python -- one of the following:
 
-  - CPython_ >= 2.6 or >= 3.3
-  - PyPy_ >= 4.0
-  - IronPython_ 2.7
+  - CPython_ >= 3.5
+  - PyPy_ >= 5.5
 
 * MySQL Server -- one of the following:
 
@@ -24,6 +23,5 @@ Requirements
 
 .. _CPython: http://www.python.org/
 .. _PyPy: http://pypy.org/
-.. _IronPython: http://ironpython.net/
 .. _MySQL: http://www.mysql.com/
 .. _MariaDB: https://mariadb.org/

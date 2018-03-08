@@ -1,5 +1,9 @@
 # Changes
 
+## Trio-MySQL
+
+This clone of PyMySQL has been Trio-ized.
+
 ## 0.8
 
 Release date: 2017-12-20
@@ -135,7 +139,7 @@ Release date: 2016-01-10
   binary types are: `bytearray` on Python 2, `bytes` and `bytearray` on Python 3.
   This is because recent MySQL show warnings when string literal is invalid for
   connection encoding.
-* `pymysql.Binary()` returns `bytearray` on Python 2.  This is required to distinguish
+* `trio_mysql.Binary()` returns `bytearray` on Python 2.  This is required to distinguish
   binary and string.
 * Auth plugin support.
 * no_delay option is ignored.  It will be removed in PyMySQL 0.8.
@@ -233,7 +237,7 @@ Skipped
 * Added support for client_flag, charset, sql_mode, read_default_file,
   use_unicode, cursorclass, init_command, and connect_timeout.
 * Refactoring for some more compatibility with MySQLdb including a fake
-  pymysql.version_info attribute.
+  trio_mysql.version_info attribute.
 * Now runs with no warnings with the -3 command-line switch
 * Added test cases for all outstanding tickets and closed most of them.
 * Basic Jython support added.

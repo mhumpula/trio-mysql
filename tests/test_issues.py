@@ -3,10 +3,10 @@ import time
 import warnings
 import sys
 
-import pymysql
-from pymysql import cursors
-from pymysql._compat import text_type
-from pymysql.tests import base
+import trio_mysql
+from trio_mysql import cursors
+from trio_mysql._compat import text_type
+from trio_mysql.tests import base
 import unittest2
 
 try:
@@ -18,7 +18,7 @@ except AttributeError:
 
 __all__ = ["TestOldIssues", "TestNewIssues", "TestGitHubIssues"]
 
-class TestOldIssues(base.PyMySQLTestCase):
+class TestOldIssues(base.TrioMySQLTestCase):
     def test_issue_3(self):
         """ undefined methods datetime_or_None, date_or_None """
         conn = self.connections[0]
@@ -66,7 +66,7 @@ class TestOldIssues(base.PyMySQLTestCase):
         # ToDo: this test requires access to db 'mysql'.
         kwargs = self.databases[0].copy()
         kwargs['db'] = "mysql"
-        conn = pymysql.connect(**kwargs)
+        conn = trio_mysql.connect(**kwargs)
         c = conn.cursor()
         c.execute("select * from user")
         conn.close()
@@ -92,7 +92,7 @@ KEY (`station`,`dh`,`echeance`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;""")
     def test_issue_9(self):
         """ sets DeprecationWarning in Python 2.6 """
         try:
-            reload(pymysql)
+            reload(trio_mysql)
         except DeprecationWarning:
             self.fail()
 
@@ -163,25 +163,25 @@ KEY (`station`,`dh`,`echeance`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;""")
             c.execute("grant all privileges on %s.issue17 to 'issue17user'@'%%' identified by '1234'" % db)
             conn.commit()
 
-            conn2 = pymysql.connect(host=host, user="issue17user", passwd="1234", db=db)
+            conn2 = trio_mysql.connect(host=host, user="issue17user", passwd="1234", db=db)
             c2 = conn2.cursor()
             c2.execute("select x from issue17")
             self.assertEqual("hello, world!", c2.fetchone()[0])
         finally:
             c.execute("drop table issue17")
 
-class TestNewIssues(base.PyMySQLTestCase):
+class TestNewIssues(base.TrioMySQLTestCase):
     def test_issue_34(self):
         try:
-            pymysql.connect(host="localhost", port=1237, user="root")
+            trio_mysql.connect(host="localhost", port=1237, user="root")
             self.fail()
-        except pymysql.OperationalError as e:
+        except trio_mysql.OperationalError as e:
             self.assertEqual(2003, e.args[0])
         except Exception:
             self.fail()
 
     def test_issue_33(self):
-        conn = pymysql.connect(charset="utf8", **self.databases[0])
+        conn = trio_mysql.connect(charset="utf8", **self.databases[0])
         self.safe_create_table(conn, u'hei\xdfe',
                                u'create table hei\xdfe (name varchar(32))')
         c = conn.cursor()
@@ -197,7 +197,7 @@ class TestNewIssues(base.PyMySQLTestCase):
         try:
             c.execute("select sleep(10)")
             self.fail()
-        except pymysql.OperationalError as e:
+        except trio_mysql.OperationalError as e:
             self.assertEqual(2013, e.args[0])
 
     def test_issue_36(self):
@@ -275,7 +275,7 @@ class TestNewIssues(base.PyMySQLTestCase):
         finally:
             c.execute("drop table issue54")
 
-class TestGitHubIssues(base.PyMySQLTestCase):
+class TestGitHubIssues(base.TrioMySQLTestCase):
     def test_issue_66(self):
         """ 'Connection' object has no attribute 'insert_id' """
         conn = self.connections[0]
@@ -295,7 +295,7 @@ class TestGitHubIssues(base.PyMySQLTestCase):
     def test_issue_79(self):
         """ Duplicate field overwrites the previous one in the result of DictCursor """
         conn = self.connections[0]
-        c = conn.cursor(pymysql.cursors.DictCursor)
+        c = conn.cursor(trio_mysql.cursors.DictCursor)
 
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore")
@@ -341,7 +341,7 @@ class TestGitHubIssues(base.PyMySQLTestCase):
 
     def test_issue_114(self):
         """ autocommit is not set after reconnecting with ping() """
-        conn = pymysql.connect(charset="utf8", **self.databases[0])
+        conn = trio_mysql.connect(charset="utf8", **self.databases[0])
         conn.autocommit(False)
         c = conn.cursor()
         c.execute("""select @@autocommit;""")
@@ -353,7 +353,7 @@ class TestGitHubIssues(base.PyMySQLTestCase):
         conn.close()
 
         # Ensure autocommit() is still working
-        conn = pymysql.connect(charset="utf8", **self.databases[0])
+        conn = trio_mysql.connect(charset="utf8", **self.databases[0])
         c = conn.cursor()
         c.execute("""select @@autocommit;""")
         self.assertFalse(c.fetchone()[0])
@@ -382,7 +382,7 @@ class TestGitHubIssues(base.PyMySQLTestCase):
 
     def test_issue_321(self):
         """ Test iterable as query argument. """
-        conn = pymysql.connect(charset="utf8", **self.databases[0])
+        conn = trio_mysql.connect(charset="utf8", **self.databases[0])
         self.safe_create_table(
             conn, "issue321",
             "create table issue321 (value_1 varchar(1), value_2 varchar(1))")
@@ -409,7 +409,7 @@ class TestGitHubIssues(base.PyMySQLTestCase):
 
     def test_issue_364(self):
         """ Test mixed unicode/binary arguments in executemany. """
-        conn = pymysql.connect(charset="utf8", **self.databases[0])
+        conn = trio_mysql.connect(charset="utf8", **self.databases[0])
         self.safe_create_table(
             conn, "issue364",
             "create table issue364 (value_1 binary(3), value_2 varchar(3)) "
@@ -417,7 +417,7 @@ class TestGitHubIssues(base.PyMySQLTestCase):
 
         sql = "insert into issue364 (value_1, value_2) values (_binary %s, %s)"
         usql = u"insert into issue364 (value_1, value_2) values (_binary %s, %s)"
-        values = [pymysql.Binary(b"\x00\xff\x00"), u"\xe4\xf6\xfc"]
+        values = [trio_mysql.Binary(b"\x00\xff\x00"), u"\xe4\xf6\xfc"]
 
         # test single insert and select
         cur = conn.cursor()
@@ -439,7 +439,7 @@ class TestGitHubIssues(base.PyMySQLTestCase):
 
     def test_issue_363(self):
         """ Test binary / geometry types. """
-        conn = pymysql.connect(charset="utf8", **self.databases[0])
+        conn = trio_mysql.connect(charset="utf8", **self.databases[0])
         self.safe_create_table(
             conn, "issue363",
             "CREATE TABLE issue363 ( "
@@ -452,7 +452,7 @@ class TestGitHubIssues(base.PyMySQLTestCase):
                  "(1998, GeomFromText('LINESTRING(1.1 1.1,2.2 2.2)'))")
         # From MySQL 5.7, ST_GeomFromText is added and GeomFromText is deprecated.
         if self.mysql_server_is(conn, (5, 7, 0)):
-            with self.assertWarns(pymysql.err.Warning) as cm:
+            with self.assertWarns(trio_mysql.err.Warning) as cm:
                 cur.execute(query)
         else:
             cur.execute(query)
@@ -460,7 +460,7 @@ class TestGitHubIssues(base.PyMySQLTestCase):
         # select WKT
         query = "SELECT AsText(geom) FROM issue363"
         if self.mysql_server_is(conn, (5, 7, 0)):
-            with self.assertWarns(pymysql.err.Warning) as cm:
+            with self.assertWarns(trio_mysql.err.Warning) as cm:
                 cur.execute(query)
         else:
             cur.execute(query)
@@ -470,7 +470,7 @@ class TestGitHubIssues(base.PyMySQLTestCase):
         # select WKB
         query = "SELECT AsBinary(geom) FROM issue363"
         if self.mysql_server_is(conn, (5, 7, 0)):
-            with self.assertWarns(pymysql.err.Warning) as cm:
+            with self.assertWarns(trio_mysql.err.Warning) as cm:
                 cur.execute(query)
         else:
             cur.execute(query)
@@ -491,12 +491,12 @@ class TestGitHubIssues(base.PyMySQLTestCase):
 
     def test_issue_491(self):
         """ Test warning propagation """
-        conn = pymysql.connect(charset="utf8", **self.databases[0])
+        conn = trio_mysql.connect(charset="utf8", **self.databases[0])
 
         with warnings.catch_warnings():
-            # Ignore all warnings other than pymysql generated ones
+            # Ignore all warnings other than trio_mysql generated ones
             warnings.simplefilter("ignore")
-            warnings.simplefilter("error", category=pymysql.Warning)
+            warnings.simplefilter("error", category=trio_mysql.Warning)
 
             # verify for both buffered and unbuffered cursor types
             for cursor_class in (cursors.Cursor, cursors.SSCursor):
@@ -504,7 +504,7 @@ class TestGitHubIssues(base.PyMySQLTestCase):
                 try:
                     c.execute("SELECT CAST('124b' AS SIGNED)")
                     c.fetchall()
-                except pymysql.Warning as e:
+                except trio_mysql.Warning as e:
                     # Warnings should have errorcode and string message, just like exceptions
                     self.assertEqual(len(e.args), 2)
                     self.assertEqual(e.args[0], 1292)

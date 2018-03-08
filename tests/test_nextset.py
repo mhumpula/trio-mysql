@@ -1,10 +1,10 @@
 import unittest2
 
-from pymysql.tests import base
-from pymysql import util
+from trio_mysql.tests import base
+from trio_mysql import util
 
 
-class TestNextset(base.PyMySQLTestCase):
+class TestNextset(base.TrioMySQLTestCase):
 
     def setUp(self):
         super(TestNextset, self).setUp()

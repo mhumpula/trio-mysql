@@ -3,10 +3,10 @@
 __pycache__
 .coverage
 /dist
-/PyMySQL.egg-info
+/trio_mysql.egg-info
 /.tox
 /build
-/pymysql/tests/databases.json
+/tests/databases.json
 
 /.idea
 docs/build

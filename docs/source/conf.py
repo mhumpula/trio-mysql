@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# PyMySQL documentation build configuration file, created by
+# Trio-MySQL documentation build configuration file, created by
 # sphinx-quickstart on Tue May 17 12:01:11 2016.
 #
 # This file is execfile()d with the current directory set to its
@@ -46,8 +46,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'PyMySQL'
-copyright = u'2016, Yutaka Matsubara and GitHub contributors'
+project = u'Trio-MySQL'
+copyright = u'2018, Matthias Urlichs and GitHub contributors'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -179,7 +179,7 @@ html_static_path = ['_static']
 #html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'PyMySQLdoc'
+htmlhelp_basename = 'Trio-MySQL_doc'
 
 
 # -- Options for LaTeX output ---------------------------------------------
@@ -199,7 +199,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  ('index', 'PyMySQL.tex', u'PyMySQL Documentation',
+  ('index', 'Trio-MySQL.tex', u'Trio-MySQL Documentation',
    u'Yutaka Matsubara and GitHub contributors', 'manual'),
 ]
 
@@ -229,7 +229,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'pymysql', u'PyMySQL Documentation',
+    ('index', 'trio_mysql', u'Trio-MySQL Documentation',
      [u'Yutaka Matsubara and GitHub contributors'], 1)
 ]
 
@@ -243,8 +243,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'PyMySQL', u'PyMySQL Documentation',
-   u'Yutaka Matsubara and GitHub contributors', 'PyMySQL', 'One line description of project.',
+  ('index', 'Trio-MySQL', u'Trio-MySQL Documentation',
+   u'Matthias Urlichs and GitHub contributors', 'Trio-MySQL', 'One line description of project.',
    'Miscellaneous'),
 ]
 

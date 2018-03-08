@@ -85,17 +85,17 @@ qthelp:
 	@echo
 	@echo "Build finished; now you can run "qcollectiongenerator" with the" \
 	      ".qhcp project file in $(BUILDDIR)/qthelp, like this:"
-	@echo "# qcollectiongenerator $(BUILDDIR)/qthelp/PyMySQL.qhcp"
+	@echo "# qcollectiongenerator $(BUILDDIR)/qthelp/trio-mysql.qhcp"
 	@echo "To view the help file:"
-	@echo "# assistant -collectionFile $(BUILDDIR)/qthelp/PyMySQL.qhc"
+	@echo "# assistant -collectionFile $(BUILDDIR)/qthelp/trio-mysql.qhc"
 
 devhelp:
 	$(SPHINXBUILD) -b devhelp $(ALLSPHINXOPTS) $(BUILDDIR)/devhelp
 	@echo
 	@echo "Build finished."
 	@echo "To view the help file:"
-	@echo "# mkdir -p $$HOME/.local/share/devhelp/PyMySQL"
-	@echo "# ln -s $(BUILDDIR)/devhelp $$HOME/.local/share/devhelp/PyMySQL"
+	@echo "# mkdir -p $$HOME/.local/share/devhelp/trio-mysql"
+	@echo "# ln -s $(BUILDDIR)/devhelp $$HOME/.local/share/devhelp/trio-mysql"
 	@echo "# devhelp"
 
 epub:

@@ -6,16 +6,16 @@ import warnings
 
 from unittest2 import SkipTest
 
-from pymysql import util
-import pymysql.cursors
-from pymysql.tests import base
-from pymysql.err import ProgrammingError
+from trio_mysql import util
+import trio_mysql.cursors
+from trio_mysql.tests import base
+from trio_mysql.err import ProgrammingError
 
 
 __all__ = ["TestConversion", "TestCursor", "TestBulkInserts"]
 
 
-class TestConversion(base.PyMySQLTestCase):
+class TestConversion(base.TrioMySQLTestCase):
     def test_datatypes(self):
         """ test every data type """
         conn = self.connections[0]
@@ -158,7 +158,7 @@ class TestConversion(base.PyMySQLTestCase):
             c.execute("drop table test_datetime")
 
 
-class TestCursor(base.PyMySQLTestCase):
+class TestCursor(base.TrioMySQLTestCase):
     # this test case does not work quite right yet, however,
     # we substitute in None for the erroneous field which is
     # compatible with the DB-API 2.0 spec and has not broken
@@ -218,7 +218,7 @@ class TestCursor(base.PyMySQLTestCase):
         c = conn.cursor()
         c.execute("create table test_nr (b varchar(32))")
         try:
-            data = "pymysql"
+            data = "trio_mysql"
             c.execute("insert into test_nr (b) values (%s)", (data,))
             self.assertEqual(None, c.fetchone())
         finally:
@@ -254,7 +254,7 @@ class TestCursor(base.PyMySQLTestCase):
     def test_json(self):
         args = self.databases[0].copy()
         args["charset"] = "utf8mb4"
-        conn = pymysql.connect(**args)
+        conn = trio_mysql.connect(**args)
         if not self.mysql_server_is(conn, (5, 7, 0)):
             raise SkipTest("JSON type is not supported on MySQL <= 5.6")
 
@@ -277,9 +277,9 @@ create table test_json (
         self.assertEqual(json.loads(res), json.loads(json_str))
 
 
-class TestBulkInserts(base.PyMySQLTestCase):
+class TestBulkInserts(base.TrioMySQLTestCase):
 
-    cursor_type = pymysql.cursors.DictCursor
+    cursor_type = trio_mysql.cursors.DictCursor
 
     def setUp(self):
         super(TestBulkInserts, self).setUp()
@@ -386,6 +386,6 @@ age = values(age)"""))
             warnings.simplefilter("always")
             cur.execute("drop table if exists no_exists_table")
         self.assertEqual(len(ws), 1)
-        self.assertEqual(ws[0].category, pymysql.Warning)
+        self.assertEqual(ws[0].category, trio_mysql.Warning)
         if u"no_exists_table" not in str(ws[0].message):
             self.fail("'no_exists_table' not in %s" % (str(ws[0].message),))

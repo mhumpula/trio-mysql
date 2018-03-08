@@ -1,15 +1,15 @@
 import sys
 
 try:
-    from pymysql.tests import base
-    import pymysql.cursors
+    from trio_mysql.tests import base
+    import trio_mysql.cursors
 except Exception:
     # For local testing from top-level directory, without installing
-    sys.path.append('../pymysql')
-    from pymysql.tests import base
-    import pymysql.cursors
+    sys.path.append('../trio_mysql')
+    from trio_mysql.tests import base
+    import trio_mysql.cursors
 
-class TestSSCursor(base.PyMySQLTestCase):
+class TestSSCursor(base.TrioMySQLTestCase):
     def test_SSCursor(self):
         affected_rows = 18446744073709551615
 
@@ -27,7 +27,7 @@ class TestSSCursor(base.PyMySQLTestCase):
             ('America', '', 'America/Detroit'),]
 
         try:
-            cursor = conn.cursor(pymysql.cursors.SSCursor)
+            cursor = conn.cursor(trio_mysql.cursors.SSCursor)
 
             # Create table
             cursor.execute(('CREATE TABLE tz_data ('

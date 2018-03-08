@@ -4,9 +4,9 @@
 Development
 ===========
 
-You can help developing PyMySQL by `contributing on GitHub`_.
+You can help developing Trio-MySQL by `contributing on GitHub`_.
 
-.. _contributing on GitHub: https://github.com/PyMySQL/PyMySQL
+.. _contributing on GitHub: https://github.com/python-trio/trio-mysql
 
 Building the documentation
 --------------------------
@@ -19,14 +19,14 @@ Test Suite
 
 If you would like to run the test suite, create a database for testing like this::
 
-    mysql -e 'create database test_pymysql  DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;'
-    mysql -e 'create database test_pymysql2 DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;'
+    mysql -e 'create database test_trio_mysql  DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;'
+    mysql -e 'create database test_trio_mysql2 DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;'
 
-Then, copy the file ``.travis/database.json`` to ``pymysql/tests/databases.json``
+Then, copy the file ``.travis/database.json`` to ``trio_mysql/tests/databases.json``
 and edit the new file to match your MySQL configuration::
 
-    $ cp .travis/database.json pymysql/tests/databases.json
-    $ $EDITOR pymysql/tests/databases.json
+    $ cp .travis/database.json trio_mysql/tests/databases.json
+    $ $EDITOR trio_mysql/tests/databases.json
 
 To run all the tests, execute the script ``runtests.py``::
 
