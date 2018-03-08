@@ -4,8 +4,6 @@ import os
 import re
 import warnings
 
-import unittest2
-
 import trio_mysql
 from .._compat import CPYTHON
 
@@ -84,3 +82,7 @@ class TrioMySQLTestCase:
         gc.collect()
         if not CPYTHON:
             gc.collect()
+
+class SkipTest(RuntimeError):
+    pass
+

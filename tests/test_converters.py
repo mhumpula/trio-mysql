@@ -1,5 +1,4 @@
 import datetime
-from unittest import TestCase
 
 from trio_mysql._compat import PY2
 from trio_mysql import converters
@@ -8,7 +7,7 @@ from trio_mysql import converters
 __all__ = ["TestConverter"]
 
 
-class TestConverter(TestCase):
+class TestConverter:
 
     def test_escape_string(self):
         self.assertEqual(

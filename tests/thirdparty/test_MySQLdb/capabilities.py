@@ -6,14 +6,10 @@
 """
 import sys
 from time import time
-try:
-    import unittest2 as unittest
-except ImportError:
-    import unittest
 
 PY2 = sys.version_info[0] == 2
 
-class DatabaseTest(unittest.TestCase):
+class TestDatabase:
 
     db_module = None
     connect_args = ()

@@ -114,6 +114,3 @@ class TestSSDictCursor(TestDictCursor):
     def _ensure_cursor_expired(self, cursor):
         list(cursor.fetchall_unbuffered())
 
-if __name__ == "__main__":
-    import unittest
-    unittest.main()

@@ -1,8 +1,4 @@
 from . import capabilities
-try:
-    import unittest2 as unittest
-except ImportError:
-    import unittest
 import trio_mysql
 from trio_mysql.tests import base
 import warnings

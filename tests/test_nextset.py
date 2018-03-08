@@ -1,4 +1,4 @@
-import unittest2
+import pytest
 
 from trio_mysql.tests import base
 from trio_mysql import util
@@ -38,7 +38,7 @@ class TestNextset(base.TrioMySQLTestCase):
         self.assertEqual([(2,)], list(cur))
         self.assertFalse(bool(cur.nextset()))
 
-    @unittest2.expectedFailure
+    @pytest.mark.xfail
     def test_multi_cursor(self):
         cur1 = self.con.cursor()
         cur2 = self.con.cursor()

@@ -14,11 +14,6 @@ __rcs_id__  = '$Id$'
 __version__ = '$Revision$'[11:-2]
 __author__ = 'Stuart Bishop <zen@shangri-la.dropbear.id.au>'
 
-try:
-    import unittest2 as unittest
-except ImportError:
-    import unittest
-
 import time
 
 # $Log$
@@ -67,7 +62,7 @@ import time
 # - Fix bugs in test_setoutputsize_basic and test_setinputsizes
 #
 
-class DatabaseAPI20Test(unittest.TestCase):
+class TestDatabaseAPI20:
     ''' Test a database self.driver for DB API 2.0 compatibility.
         This implementation tests Gadfly, but the TestCase
         is structured so that other self.drivers can subclass this

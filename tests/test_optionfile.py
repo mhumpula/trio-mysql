@@ -1,5 +1,4 @@
 from trio_mysql.optionfile import Parser
-from unittest import TestCase
 from trio_mysql._compat import PY2
 
 try:
@@ -20,7 +19,7 @@ skip-slave-start
 """)
 
 
-class TestParser(TestCase):
+class TestParser:
 
     def test_string(self):
         parser = Parser()

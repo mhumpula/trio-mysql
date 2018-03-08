@@ -2,11 +2,6 @@ from . import dbapi20
 import trio_mysql
 from trio_mysql.tests import base
 
-try:
-    import unittest2 as unittest
-except ImportError:
-    import unittest
-
 
 class test_MySQLdb(dbapi20.DatabaseAPI20Test):
     driver = trio_mysql

@@ -4,7 +4,7 @@ import json
 import time
 import warnings
 
-from unittest2 import SkipTest
+import pytest
 
 from trio_mysql import util
 import trio_mysql.cursors
@@ -138,12 +138,13 @@ class TestConversion(base.TrioMySQLTestCase):
                           -datetime.timedelta(0, 1800)),
                          c.fetchone())
 
+    @pytest.mark.xfail(raises=base.SkipTest)
     def test_datetime_microseconds(self):
         """ test datetime conversion w microseconds"""
 
         conn = self.connections[0]
         if not self.mysql_server_is(conn, (5, 6, 4)):
-            raise SkipTest("target backend does not support microseconds")
+            raise base.SkipTest("target backend does not support microseconds")
         c = conn.cursor()
         dt = datetime.datetime(2013, 11, 12, 9, 9, 9, 123450)
         c.execute("create table test_datetime (id int, ts datetime(6))")
@@ -251,12 +252,13 @@ class TestCursor(base.TrioMySQLTestCase):
         self.assertEqual([(1,)], list(c.fetchall()))
         c.close()
 
+    @pytest.mark.xfail(raises=base.SkipTest)
     def test_json(self):
         args = self.databases[0].copy()
         args["charset"] = "utf8mb4"
         conn = trio_mysql.connect(**args)
         if not self.mysql_server_is(conn, (5, 7, 0)):
-            raise SkipTest("JSON type is not supported on MySQL <= 5.6")
+            raise base.SkipTest("JSON type is not supported on MySQL <= 5.6")
 
         self.safe_create_table(conn, "test_json", """\
 create table test_json (

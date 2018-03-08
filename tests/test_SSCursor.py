@@ -105,6 +105,3 @@ class TestSSCursor(base.TrioMySQLTestCase):
 
 __all__ = ["TestSSCursor"]
 
-if __name__ == "__main__":
-    import unittest
-    unittest.main()

@@ -7,7 +7,7 @@ import trio_mysql
 from trio_mysql import cursors
 from trio_mysql._compat import text_type
 from trio_mysql.tests import base
-import unittest2
+import pytest
 
 try:
     import imp
@@ -145,7 +145,7 @@ KEY (`station`,`dh`,`echeance`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;""")
         finally:
             c.execute("drop table issue16")
 
-    @unittest2.skip("test_issue_17() requires a custom, legacy MySQL configuration and will not be run.")
+    @pytest.mark.skip("test_issue_17() requires a custom, legacy MySQL configuration and will not be run.")
     def test_issue_17(self):
         """could not connect mysql use passwod"""
         conn = self.connections[0]
@@ -189,7 +189,7 @@ class TestNewIssues(base.TrioMySQLTestCase):
         c.execute(u"select name from hei\xdfe")
         self.assertEqual(u"Pi\xdfata", c.fetchone()[0])
 
-    @unittest2.skip("This test requires manual intervention")
+    @pytest.mark.skip("This test requires manual intervention")
     def test_issue_35(self):
         conn = self.connections[0]
         c = conn.cursor()

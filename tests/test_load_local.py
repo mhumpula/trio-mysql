@@ -87,7 +87,3 @@ class TestLoadLocal(base.TrioMySQLTestCase):
             c.execute("DROP TABLE test_load_local")
             c.close()
 
-
-if __name__ == "__main__":
-    import unittest
-    unittest.main()

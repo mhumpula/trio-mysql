@@ -1,12 +1,10 @@
-import unittest2
-
 from trio_mysql import err
 
 
 __all__ = ["TestRaiseException"]
 
 
-class TestRaiseException(unittest2.TestCase):
+class TestRaiseException:
 
     def test_raise_mysql_exception(self):
         data = b"\xff\x15\x04Access denied"

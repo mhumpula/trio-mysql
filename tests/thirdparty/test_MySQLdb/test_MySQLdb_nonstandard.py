@@ -1,8 +1,4 @@
 import sys
-try:
-    import unittest2 as unittest
-except ImportError:
-    import unittest
 
 import trio_mysql
 _mysql = trio_mysql
@@ -14,7 +10,7 @@ if not PY2:
     basestring = str
 
 
-class TestDBAPISet(unittest.TestCase):
+class TestDBAPISet:
     def test_set_equality(self):
         self.assertTrue(trio_mysql.STRING == trio_mysql.STRING)
 
@@ -28,7 +24,7 @@ class TestDBAPISet(unittest.TestCase):
         self.assertTrue(FIELD_TYPE.DATE != trio_mysql.STRING)
 
 
-class CoreModule(unittest.TestCase):
+class TestCoreModule:
     """Core _mysql module features."""
 
     def test_NULL(self):
@@ -49,7 +45,7 @@ class CoreModule(unittest.TestCase):
         self.assertTrue(isinstance(_mysql.thread_safe(), int))
 
 
-class CoreAPI(unittest.TestCase):
+class TestCoreAPI:
     """Test _mysql interaction internals."""
 
     def setUp(self):
@@ -96,6 +92,3 @@ class CoreAPI(unittest.TestCase):
         else:
             self.assertTrue(isinstance(self.conn.get_server_info(), basestring),
                             "Should return an str.")
-
-if __name__ == "__main__":
-    unittest.main()

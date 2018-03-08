@@ -1,9 +1,8 @@
 import datetime
 import sys
 import time
-import unittest2
 import trio_mysql
-from trio_mysql.tests import base
+from tests import base
 from trio_mysql._compat import text_type
 
 
@@ -98,8 +97,9 @@ class TestAuthentication(base.TrioMySQLTestCase):
         # Bit of an assumption that the current user is a native password
         self.assertEqual('mysql_native_password', self.connections[0]._auth_plugin_name)
 
-    @unittest2.skipUnless(socket_auth, "connection to unix_socket required")
-    @unittest2.skipIf(socket_found, "socket plugin already installed")
+    @pytest.mark.xfail(raises=base.SkipTest)
+    @pytest.mark.skipif(not socket_auth, "connection to unix_socket required")
+    @pytest.mark.skipif(socket_found, "socket plugin already installed")
     def testSocketAuthInstallPlugin(self):
         # needs plugin. lets install it.
         cur = self.connections[0].cursor()
@@ -116,13 +116,13 @@ class TestAuthentication(base.TrioMySQLTestCase):
                 self.realtestSocketAuth()
             except trio_mysql.err.InternalError:
                 TestAuthentication.socket_found = False
-                raise unittest2.SkipTest('we couldn\'t install the socket plugin')
+                raise base.SkipTest('we couldn\'t install the socket plugin')
         finally:
             if TestAuthentication.socket_found:
                 cur.execute("uninstall plugin %s" % self.socket_plugin_name)
 
-    @unittest2.skipUnless(socket_auth, "connection to unix_socket required")
-    @unittest2.skipUnless(socket_found, "no socket plugin")
+    @pytest.mark.skipif(not socket_auth, "connection to unix_socket required")
+    @pytest.mark.skipif(not socket_found, "no socket plugin")
     def testSocketAuth(self):
         self.realtestSocketAuth()
 
@@ -171,8 +171,9 @@ class TestAuthentication(base.TrioMySQLTestCase):
             self.con=con
 
 
-    @unittest2.skipUnless(socket_auth, "connection to unix_socket required")
-    @unittest2.skipIf(two_questions_found, "two_questions plugin already installed")
+    @pytest.mark.xfail(raises=base.SkipTest)
+    @pytest.mark.skipif(not socket_auth, "connection to unix_socket required")
+    @pytest.mark.skipif(two_questions_found, "two_questions plugin already installed")
     def testDialogAuthTwoQuestionsInstallPlugin(self):
         # needs plugin. lets install it.
         cur = self.connections[0].cursor()
@@ -181,13 +182,13 @@ class TestAuthentication(base.TrioMySQLTestCase):
             TestAuthentication.two_questions_found = True
             self.realTestDialogAuthTwoQuestions()
         except trio_mysql.err.InternalError:
-            raise unittest2.SkipTest('we couldn\'t install the two_questions plugin')
+            raise base.SkipTest('we couldn\'t install the two_questions plugin')
         finally:
             if TestAuthentication.two_questions_found:
                 cur.execute("uninstall plugin two_questions")
 
-    @unittest2.skipUnless(socket_auth, "connection to unix_socket required")
-    @unittest2.skipUnless(two_questions_found, "no two questions auth plugin")
+    @pytest.mark.skipif(not socket_auth, "connection to unix_socket required")
+    @pytest.mark.skipif(not two_questions_found, "no two questions auth plugin")
     def testDialogAuthTwoQuestions(self):
         self.realTestDialogAuthTwoQuestions()
 
@@ -201,8 +202,9 @@ class TestAuthentication(base.TrioMySQLTestCase):
                 trio_mysql.connect(user='trio_mysql_2q', **self.db)
             trio_mysql.connect(user='trio_mysql_2q', auth_plugin_map={b'dialog': TestAuthentication.Dialog}, **self.db)
 
-    @unittest2.skipUnless(socket_auth, "connection to unix_socket required")
-    @unittest2.skipIf(three_attempts_found, "three_attempts plugin already installed")
+    @pytest.mark.xfail(raises=base.SkipTest)
+    @pytest.mark.skipif(not socket_auth, "connection to unix_socket required")
+    @pytest.mark.skipif(three_attempts_found, "three_attempts plugin already installed")
     def testDialogAuthThreeAttemptsQuestionsInstallPlugin(self):
         # needs plugin. lets install it.
         cur = self.connections[0].cursor()
@@ -211,13 +213,13 @@ class TestAuthentication(base.TrioMySQLTestCase):
             TestAuthentication.three_attempts_found = True
             self.realTestDialogAuthThreeAttempts()
         except trio_mysql.err.InternalError:
-            raise unittest2.SkipTest('we couldn\'t install the three_attempts plugin')
+            raise base.SkipTest('we couldn\'t install the three_attempts plugin')
         finally:
             if TestAuthentication.three_attempts_found:
                 cur.execute("uninstall plugin three_attempts")
 
-    @unittest2.skipUnless(socket_auth, "connection to unix_socket required")
-    @unittest2.skipUnless(three_attempts_found, "no three attempts plugin")
+    @pytest.mark.skipif(not socket_auth, "connection to unix_socket required")
+    @pytest.mark.skipif(not three_attempts_found, "no three attempts plugin")
     def testDialogAuthThreeAttempts(self):
         self.realTestDialogAuthThreeAttempts()
 
@@ -242,10 +244,11 @@ class TestAuthentication(base.TrioMySQLTestCase):
             with self.assertRaises(trio_mysql.err.OperationalError):
                 trio_mysql.connect(user='trio_mysql_3a', auth_plugin_map={b'dialog': TestAuthentication.Dialog}, **self.db)
 
-    @unittest2.skipUnless(socket_auth, "connection to unix_socket required")
-    @unittest2.skipIf(pam_found, "pam plugin already installed")
-    @unittest2.skipIf(os.environ.get('PASSWORD') is None, "PASSWORD env var required")
-    @unittest2.skipIf(os.environ.get('PAMSERVICE') is None, "PAMSERVICE env var required")
+    @pytest.mark.xfail(raises=base.SkipTest)
+    @pytest.mark.skipif(not socket_auth, "connection to unix_socket required")
+    @pytest.mark.skipif(pam_found, "pam plugin already installed")
+    @pytest.mark.skipif(os.environ.get('PASSWORD') is None, "PASSWORD env var required")
+    @pytest.mark.skipif(os.environ.get('PAMSERVICE') is None, "PAMSERVICE env var required")
     def testPamAuthInstallPlugin(self):
         # needs plugin. lets install it.
         cur = self.connections[0].cursor()
@@ -254,16 +257,16 @@ class TestAuthentication(base.TrioMySQLTestCase):
             TestAuthentication.pam_found = True
             self.realTestPamAuth()
         except trio_mysql.err.InternalError:
-            raise unittest2.SkipTest('we couldn\'t install the auth_pam plugin')
+            raise base.SkipTest('we couldn\'t install the auth_pam plugin')
         finally:
             if TestAuthentication.pam_found:
                 cur.execute("uninstall plugin pam")
 
 
-    @unittest2.skipUnless(socket_auth, "connection to unix_socket required")
-    @unittest2.skipUnless(pam_found, "no pam plugin")
-    @unittest2.skipIf(os.environ.get('PASSWORD') is None, "PASSWORD env var required")
-    @unittest2.skipIf(os.environ.get('PAMSERVICE') is None, "PAMSERVICE env var required")
+    @pytest.mark.skipif(not socket_auth, "connection to unix_socket required")
+    @pytest.mark.skipif(not pam_found, "no pam plugin")
+    @pytest.mark.skipif(os.environ.get('PASSWORD') is None, "PASSWORD env var required")
+    @pytest.mark.skipif(os.environ.get('PAMSERVICE') is None, "PAMSERVICE env var required")
     def testPamAuth(self):
         self.realTestPamAuth()
 
@@ -303,15 +306,16 @@ class TestAuthentication(base.TrioMySQLTestCase):
     # select old_password("crummy p\tassword");
     #| old_password("crummy p\tassword") |
     #| 2a01785203b08770                  |
-    @unittest2.skipUnless(socket_auth, "connection to unix_socket required")
-    @unittest2.skipUnless(mysql_old_password_found, "no mysql_old_password plugin")
+    @pytest.mark.xfail(raises=base.SkipTest)
+    @pytest.mark.skipif(not socket_auth, "connection to unix_socket required")
+    @pytest.mark.skipif(not mysql_old_password_found, "no mysql_old_password plugin")
     def testMySQLOldPasswordAuth(self):
         if self.mysql_server_is(self.connections[0], (5, 7, 0)):
-            raise unittest2.SkipTest('Old passwords aren\'t supported in 5.7')
+            raise base.SkipTest('Old passwords aren\'t supported in 5.7')
         # trio_mysql.err.OperationalError: (1045, "Access denied for user 'old_pass_user'@'localhost' (using password: YES)")
         # from login in MySQL-5.6
         if self.mysql_server_is(self.connections[0], (5, 6, 0)):
-            raise unittest2.SkipTest('Old passwords don\'t authenticate in 5.6')
+            raise base.SkipTest('Old passwords don\'t authenticate in 5.6')
         db = self.db.copy()
         db['password'] = "crummy p\tassword"
         with self.connections[0] as c:
@@ -344,8 +348,8 @@ class TestAuthentication(base.TrioMySQLTestCase):
                 cur.execute("SELECT VERSION()")
             c.execute('set global secure_auth=%r' % secure_auth_setting)
 
-    @unittest2.skipUnless(socket_auth, "connection to unix_socket required")
-    @unittest2.skipUnless(sha256_password_found, "no sha256 password authentication plugin found")
+    @pytest.mark.skipif(not socket_auth, "connection to unix_socket required")
+    @pytest.mark.skipif(not sha256_password_found, "no sha256 password authentication plugin found")
     def testAuthSHA256(self):
         c = self.connections[0].cursor()
         with TempUser(c, 'trio_mysql_sha256@localhost',
@@ -486,7 +490,7 @@ class TestConnection(base.TrioMySQLTestCase):
             c.close()
             sock.close()
 
-    @unittest2.skipUnless(sys.version_info[0:2] >= (3,2), "required py-3.2")
+    @pytest.mark.skipif(sys.version_info[0:2] < (3,2), "required py-3.2")
     def test_no_delay_warning(self):
         current_db = self.databases[0].copy()
         current_db['no_delay'] =  True
