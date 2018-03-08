@@ -1,14 +1,14 @@
 import warnings
 
-from trio_mysql.tests import base
+from tests import base
 import trio_mysql.cursors
 
 class CursorTest(base.TrioMySQLTestCase):
-    def setUp(self):
-        super(CursorTest, self).setUp()
+    async def setUp(self):
+        await super().setUp()
 
         conn = self.connections[0]
-        self.safe_create_table(
+        await self.safe_create_table(
             conn,
             "test", "create table test (data varchar(10))",
         )
@@ -20,7 +20,8 @@ class CursorTest(base.TrioMySQLTestCase):
         self.test_connection = trio_mysql.connect(**self.databases[0])
         self.addCleanup(self.test_connection.close)
 
-    def test_cleanup_rows_unbuffered(self):
+    async def test_cleanup_rows_unbuffered(self, set_me_up):
+        await set_me_up(self)
         conn = self.test_connection
         cursor = conn.cursor(trio_mysql.cursors.SSCursor)
 
@@ -38,7 +39,8 @@ class CursorTest(base.TrioMySQLTestCase):
         assert await c2.fetchone() == (1,)
         assert await c2.fetchone() is None
 
-    def test_cleanup_rows_buffered(self):
+    async def test_cleanup_rows_buffered(self, set_me_up):
+        await set_me_up(self)
         conn = self.test_connection
         cursor = conn.cursor(trio_mysql.cursors.Cursor)
 
@@ -57,7 +59,8 @@ class CursorTest(base.TrioMySQLTestCase):
         assert await c2.fetchone() == (1,)
         assert await c2.fetchone() is None
 
-    def test_executemany(self):
+    async def test_executemany(self, set_me_up):
+        await set_me_up(self)
         conn = self.test_connection
         cursor = conn.cursor(trio_mysql.cursors.Cursor)
 

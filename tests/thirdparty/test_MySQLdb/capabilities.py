@@ -16,7 +16,7 @@ class TestDatabase:
     rows = 10
     debug = False
 
-    def setUp(self):
+    async def setUp(self):
         db = self.db_module.connect(*self.connect_args, **self.connect_kwargs)
         self.connection = db
         self.cursor = db.cursor()
@@ -27,7 +27,7 @@ class TestDatabase:
 
     leak_test = True
 
-    def tearDown(self):
+    async def tearDown(self):
         if self.leak_test:
             import gc
             del self.cursor
@@ -38,7 +38,7 @@ class TestDatabase:
             orphans = gc.collect()
             self.assertFalse(orphans, "%d orphaned objects found after deleting connection" % orphans)
 
-    def table_exists(self, name):
+    async def table_exists(self, name):
         try:
             await self.cursor.execute('select * from %s where 1=0' % name)
         except Exception:
@@ -49,15 +49,15 @@ class TestDatabase:
     def quote_identifier(self, ident):
         return '"%s"' % ident
 
-    def new_table_name(self):
+    async def new_table_name(self):
         i = id(self.cursor)
         while True:
             name = self.quote_identifier('tb%08x' % i)
-            if not self.table_exists(name):
+            if not await self.table_exists(name):
                 return name
             i = i + 1
 
-    def create_table(self, columndefs):
+    async def create_table(self, columndefs):
 
         """ Create a table using a list of column definitions given in
             columndefs.
@@ -67,15 +67,15 @@ class TestDatabase:
             into the table.
 
         """
-        self.table = self.new_table_name()
+        self.table = await self.new_table_name()
         await self.cursor.execute('CREATE TABLE %s (%s) %s' %
                             (self.table,
                              ',\n'.join(columndefs),
                              self.create_table_extra))
 
-    def check_data_integrity(self, columndefs, generator):
+    async def check_data_integrity(self, columndefs, generator):
         # insert
-        self.create_table(columndefs)
+        await self.create_table(columndefs)
         insert_statement = ('INSERT INTO %s VALUES (%s)' %
                             (self.table,
                              ','.join(['%s'] * len(columndefs))))
@@ -99,12 +99,13 @@ class TestDatabase:
             if not self.debug:
                 await self.cursor.execute('drop table %s' % (self.table))
 
-    def test_transactions(self):
+    async def test_transactions(self, set_me_up):
+        await set_me_up(self)
         columndefs = ( 'col1 INT', 'col2 VARCHAR(255)')
         def generator(row, col):
             if col == 0: return row
             else: return ('%i' % (row%10))*255
-        self.create_table(columndefs)
+        await self.create_table(columndefs)
         insert_statement = ('INSERT INTO %s VALUES (%s)' %
                             (self.table,
                              ','.join(['%s'] * len(columndefs))))
@@ -132,12 +133,13 @@ class TestDatabase:
         self.assertTrue(len(l) == 1, "ROLLBACK didn't work")
         await self.cursor.execute('drop table %s' % (self.table))
 
-    def test_truncation(self):
+    async def test_truncation(self, set_me_up):
+        await set_me_up(self)
         columndefs = ( 'col1 INT', 'col2 VARCHAR(255)')
         def generator(row, col):
             if col == 0: return row
             else: return ('%i' % (row%10))*((255-self.rows//2)+row)
-        self.create_table(columndefs)
+        await self.create_table(columndefs)
         insert_statement = ('INSERT INTO %s VALUES (%s)' %
                             (self.table,
                              ','.join(['%s'] * len(columndefs))))
@@ -182,107 +184,119 @@ class TestDatabase:
         await self.connection.rollback()
         await self.cursor.execute('drop table %s' % (self.table))
 
-    def test_CHAR(self):
+    async def test_CHAR(self, set_me_up):
+        await set_me_up(self)
         # Character data
         def generator(row,col):
             return ('%i' % ((row+col) % 10)) * 255
-        self.check_data_integrity(
+        await self.check_data_integrity(
             ('col1 char(255)','col2 char(255)'),
             generator)
 
-    def test_INT(self):
+    async def test_INT(self, set_me_up):
+        await set_me_up(self)
         # Number data
         def generator(row,col):
             return row*row
-        self.check_data_integrity(
+        await self.check_data_integrity(
             ('col1 INT',),
             generator)
 
-    def test_DECIMAL(self):
+    async def test_DECIMAL(self, set_me_up):
+        await set_me_up(self)
         # DECIMAL
         def generator(row,col):
             from decimal import Decimal
             return Decimal("%d.%02d" % (row, col))
-        self.check_data_integrity(
+        await self.check_data_integrity(
             ('col1 DECIMAL(5,2)',),
             generator)
 
-    def test_DATE(self):
+    async def test_DATE(self, set_me_up):
+        await set_me_up(self)
         ticks = time()
         def generator(row,col):
             return self.db_module.DateFromTicks(ticks+row*86400-col*1313)
-        self.check_data_integrity(
+        await self.check_data_integrity(
                  ('col1 DATE',),
                  generator)
 
-    def test_TIME(self):
+    async def test_TIME(self, set_me_up):
+        await set_me_up(self)
         ticks = time()
         def generator(row,col):
             return self.db_module.TimeFromTicks(ticks+row*86400-col*1313)
-        self.check_data_integrity(
+        await self.check_data_integrity(
                  ('col1 TIME',),
                  generator)
 
-    def test_DATETIME(self):
+    async def test_DATETIME(self, set_me_up):
+        await set_me_up(self)
         ticks = time()
         def generator(row,col):
             return self.db_module.TimestampFromTicks(ticks+row*86400-col*1313)
-        self.check_data_integrity(
+        await self.check_data_integrity(
                  ('col1 DATETIME',),
                  generator)
 
-    def test_TIMESTAMP(self):
+    async def test_TIMESTAMP(self, set_me_up):
+        await set_me_up(self)
         ticks = time()
         def generator(row,col):
             return self.db_module.TimestampFromTicks(ticks+row*86400-col*1313)
-        self.check_data_integrity(
+        await self.check_data_integrity(
                  ('col1 TIMESTAMP',),
                  generator)
 
-    def test_fractional_TIMESTAMP(self):
+    async def test_fractional_TIMESTAMP(self, set_me_up):
+        await set_me_up(self)
         ticks = time()
         def generator(row,col):
             return self.db_module.TimestampFromTicks(ticks+row*86400-col*1313+row*0.7*col/3.0)
-        self.check_data_integrity(
+        await self.check_data_integrity(
                  ('col1 TIMESTAMP',),
                  generator)
 
-    def test_LONG(self):
+    async def test_LONG(self, set_me_up):
+        await set_me_up(self)
         def generator(row,col):
             if col == 0:
                 return row
             else:
                 return self.BLOBUText # 'BLOB Text ' * 1024
-        self.check_data_integrity(
+        await self.check_data_integrity(
                  ('col1 INT', 'col2 LONG'),
                  generator)
 
-    def test_TEXT(self):
+    async def test_TEXT(self, set_me_up):
+        await set_me_up(self)
         def generator(row,col):
             if col == 0:
                 return row
             else:
                 return self.BLOBUText[:5192] # 'BLOB Text ' * 1024
-        self.check_data_integrity(
+        await self.check_data_integrity(
                  ('col1 INT', 'col2 TEXT'),
                  generator)
 
-    def test_LONG_BYTE(self):
+    async def test_LONG_BYTE(self, set_me_up):
+        await set_me_up(self)
         def generator(row,col):
             if col == 0:
                 return row
             else:
                 return self.BLOBBinary # 'BLOB\000Binary ' * 1024
-        self.check_data_integrity(
+        await self.check_data_integrity(
                  ('col1 INT','col2 LONG BYTE'),
                  generator)
 
-    def test_BLOB(self):
+    async def test_BLOB(self, set_me_up):
+        await set_me_up(self)
         def generator(row,col):
             if col == 0:
                 return row
             else:
                 return self.BLOBBinary # 'BLOB\000Binary ' * 1024
-        self.check_data_integrity(
+        await self.check_data_integrity(
                  ('col1 INT','col2 BLOB'),
                  generator)

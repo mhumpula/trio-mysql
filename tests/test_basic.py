@@ -8,7 +8,7 @@ import pytest
 
 from trio_mysql import util
 import trio_mysql.cursors
-from trio_mysql.tests import base
+from tests import base
 from trio_mysql.err import ProgrammingError
 
 
@@ -16,7 +16,8 @@ __all__ = ["TestConversion", "TestCursor", "TestBulkInserts"]
 
 
 class TestConversion(base.TrioMySQLTestCase):
-    def test_datatypes(self):
+    async def test_datatypes(self, set_me_up):
+        await set_me_up(self)
         """ test every data type """
         conn = self.connections[0]
         c = conn.cursor()
@@ -55,7 +56,8 @@ class TestConversion(base.TrioMySQLTestCase):
         finally:
             await c.execute("drop table test_datatypes")
 
-    def test_dict(self):
+    async def test_dict(self, set_me_up):
+        await set_me_up(self)
         """ test dict escaping """
         conn = self.connections[0]
         c = conn.cursor()
@@ -67,7 +69,8 @@ class TestConversion(base.TrioMySQLTestCase):
         finally:
             await c.execute("drop table test_dict")
 
-    def test_string(self):
+    async def test_string(self, set_me_up):
+        await set_me_up(self)
         conn = self.connections[0]
         c = conn.cursor()
         await c.execute("create table test_dict (a text)")
@@ -79,7 +82,8 @@ class TestConversion(base.TrioMySQLTestCase):
         finally:
             await c.execute("drop table test_dict")
 
-    def test_integer(self):
+    async def test_integer(self, set_me_up):
+        await set_me_up(self)
         conn = self.connections[0]
         c = conn.cursor()
         await c.execute("create table test_dict (a integer)")
@@ -91,11 +95,12 @@ class TestConversion(base.TrioMySQLTestCase):
         finally:
             await c.execute("drop table test_dict")
 
-    def test_binary(self):
+    async def test_binary(self, set_me_up):
+        await set_me_up(self)
         """test binary data"""
         data = bytes(bytearray(range(255)))
         conn = self.connections[0]
-        self.safe_create_table(
+        await self.safe_create_table(
             conn, "test_binary", "create table test_binary (b binary(255))")
 
         with conn.cursor() as c:
@@ -103,11 +108,12 @@ class TestConversion(base.TrioMySQLTestCase):
             await c.execute("select b from test_binary")
             self.assertEqual(data, (await c.fetchone())[0])
 
-    def test_blob(self):
+    async def test_blob(self, set_me_up):
+        await set_me_up(self)
         """test blob data"""
         data = bytes(bytearray(range(256)) * 4)
         conn = self.connections[0]
-        self.safe_create_table(
+        await self.safe_create_table(
             conn, "test_blob", "create table test_blob (b blob)")
 
         with conn.cursor() as c:
@@ -115,7 +121,8 @@ class TestConversion(base.TrioMySQLTestCase):
             await c.execute("select b from test_blob")
             self.assertEqual(data, (await c.fetchone())[0])
 
-    def test_untyped(self):
+    async def test_untyped(self, set_me_up):
+        await set_me_up(self)
         """ test conversion of null, empty string """
         conn = self.connections[0]
         c = conn.cursor()
@@ -124,7 +131,8 @@ class TestConversion(base.TrioMySQLTestCase):
         await c.execute("select '',null")
         self.assertEqual((u'',None), await c.fetchone())
 
-    def test_timedelta(self):
+    async def test_timedelta(self, set_me_up):
+        await set_me_up(self)
         """ test timedelta conversion """
         conn = self.connections[0]
         c = conn.cursor()
@@ -139,7 +147,8 @@ class TestConversion(base.TrioMySQLTestCase):
                          await c.fetchone())
 
     @pytest.mark.xfail(raises=base.SkipTest)
-    def test_datetime_microseconds(self):
+    async def test_datetime_microseconds(self, set_me_up):
+        await set_me_up(self)
         """ test datetime conversion w microseconds"""
 
         conn = self.connections[0]
@@ -213,7 +222,8 @@ class TestCursor(base.TrioMySQLTestCase):
     #
     #    self.assertEqual(r, c.description)
 
-    def test_fetch_no_result(self):
+    async def test_fetch_no_result(self, set_me_up):
+        await set_me_up(self)
         """ test a fetchone() with no rows """
         conn = self.connections[0]
         c = conn.cursor()
@@ -225,7 +235,8 @@ class TestCursor(base.TrioMySQLTestCase):
         finally:
             await c.execute("drop table test_nr")
 
-    def test_aggregates(self):
+    async def test_aggregates(self, set_me_up):
+        await set_me_up(self)
         """ test aggregate functions """
         conn = self.connections[0]
         c = conn.cursor()
@@ -239,11 +250,12 @@ class TestCursor(base.TrioMySQLTestCase):
         finally:
             await c.execute('drop table test_aggregates')
 
-    def test_single_tuple(self):
+    async def test_single_tuple(self, set_me_up):
+        await set_me_up(self)
         """ test a single tuple """
         conn = self.connections[0]
         c = conn.cursor()
-        self.safe_create_table(
+        await self.safe_create_table(
             conn, 'mystuff',
             "create table mystuff (id integer primary key)")
         await c.execute("insert into mystuff (id) values (1)")
@@ -253,14 +265,15 @@ class TestCursor(base.TrioMySQLTestCase):
         c.close()
 
     @pytest.mark.xfail(raises=base.SkipTest)
-    def test_json(self):
+    async def test_json(self, set_me_up):
+        await set_me_up(self)
         args = self.databases[0].copy()
         args["charset"] = "utf8mb4"
         conn = trio_mysql.connect(**args)
         if not self.mysql_server_is(conn, (5, 7, 0)):
             raise base.SkipTest("JSON type is not supported on MySQL <= 5.6")
 
-        self.safe_create_table(conn, "test_json", """\
+        await self.safe_create_table(conn, "test_json", """\
 create table test_json (
     id int not null,
     json JSON not null,
@@ -283,13 +296,13 @@ class TestBulkInserts(base.TrioMySQLTestCase):
 
     cursor_type = trio_mysql.cursors.DictCursor
 
-    def setUp(self):
-        super(TestBulkInserts, self).setUp()
+    async def setUp(self):
+        await super().setUp()
         self.conn = conn = self.connections[0]
         c = conn.cursor(self.cursor_type)
 
         # create a table ane some data to query
-        self.safe_create_table(conn, 'bulkinsert', """\
+        await self.safe_create_table(conn, 'bulkinsert', """\
 CREATE TABLE bulkinsert
 (
 id int(11),
@@ -300,14 +313,15 @@ PRIMARY KEY (id)
 )
 """)
 
-    def _verify_records(self, data):
+    async def _verify_records(self, data):
         conn = self.connections[0]
         cursor = conn.cursor()
         await cursor.execute("SELECT id, name, age, height from bulkinsert")
         result = await cursor.fetchall()
         self.assertEqual(sorted(data), sorted(result))
 
-    def test_bulk_insert(self):
+    async def test_bulk_insert(self, set_me_up):
+        await set_me_up(self)
         conn = self.connections[0]
         cursor = conn.cursor()
 
@@ -319,9 +333,10 @@ PRIMARY KEY (id)
             b"insert into bulkinsert (id, name, age, height) values "
             b"(0,'bob',21,123),(1,'jim',56,45),(2,'fred',100,180)"))
         await cursor.execute('commit')
-        self._verify_records(data)
+        await self._verify_records(data)
 
-    def test_bulk_insert_multiline_statement(self):
+    async def test_bulk_insert_multiline_statement(self, set_me_up):
+        await set_me_up(self)
         conn = self.connections[0]
         cursor = conn.cursor()
         data = [(0, "bob", 21, 123), (1, "jim", 56, 45), (2, "fred", 100, 180)]
@@ -343,18 +358,20 @@ values (0,
 'fred' , 100,
 180 )"""))
         await cursor.execute('commit')
-        self._verify_records(data)
+        await self._verify_records(data)
 
-    def test_bulk_insert_single_record(self):
+    async def test_bulk_insert_single_record(self, set_me_up):
+        await set_me_up(self)
         conn = self.connections[0]
         cursor = conn.cursor()
         data = [(0, "bob", 21, 123)]
         await cursor.executemany("insert into bulkinsert (id, name, age, height) "
                            "values (%s,%s,%s,%s)", data)
         await cursor.execute('commit')
-        self._verify_records(data)
+        await self._verify_records(data)
 
-    def test_issue_288(self):
+    async def test_issue_288(self, set_me_up):
+        await set_me_up(self)
         """executemany should work with "insert ... on update" """
         conn = self.connections[0]
         cursor = conn.cursor()
@@ -379,9 +396,10 @@ values (0,
 180 ) on duplicate key update
 age = values(age)"""))
         await cursor.execute('commit')
-        self._verify_records(data)
+        await self._verify_records(data)
 
-    def test_warnings(self):
+    async def test_warnings(self, set_me_up):
+        await set_me_up(self)
         con = self.connections[0]
         cur = con.cursor()
         with warnings.catch_warnings(record=True) as ws:

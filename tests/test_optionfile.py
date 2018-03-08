@@ -20,7 +20,8 @@ skip-slave-start
 
 class TestParser:
 
-    def test_string(self):
+    async def test_string(self, set_me_up):
+        await set_me_up(self)
         parser = Parser()
         parser.read_file(StringIO(_cfg_file))
         self.assertEqual(parser.get("default", "string"), "foo")

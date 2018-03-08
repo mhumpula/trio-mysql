@@ -1,16 +1,17 @@
 import sys
 
 try:
-    from trio_mysql.tests import base
+    from tests import base
     import trio_mysql.cursors
 except Exception:
     # For local testing from top-level directory, without installing
     sys.path.append('../trio_mysql')
-    from trio_mysql.tests import base
+    from tests import base
     import trio_mysql.cursors
 
 class TestSSCursor(base.TrioMySQLTestCase):
-    def test_SSCursor(self):
+    async def test_SSCursor(self, set_me_up):
+        await set_me_up(self)
         affected_rows = 18446744073709551615
 
         conn = self.connections[0]

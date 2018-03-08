@@ -1,4 +1,4 @@
-from trio_mysql.tests import base
+from tests import base
 import trio_mysql.cursors
 
 import datetime
@@ -12,8 +12,8 @@ class TestDictCursor(base.TrioMySQLTestCase):
 
     cursor_type = trio_mysql.cursors.DictCursor
 
-    def setUp(self):
-        super(TestDictCursor, self).setUp()
+    async def setUp(self):
+        await super().setUp()
         self.conn = conn = self.connections[0]
         c = conn.cursor(self.cursor_type)
 
@@ -29,15 +29,16 @@ class TestDictCursor(base.TrioMySQLTestCase):
                 ("fred", 100, "1911-09-12 01:01:01")]
         await c.executemany("insert into dictcursor values (%s,%s,%s)", data)
 
-    def tearDown(self):
+    async def tearDown(self):
         c = self.conn.cursor()
         await c.execute("drop table dictcursor")
-        super(TestDictCursor, self).tearDown()
+        await super().tearDown()
 
-    def _ensure_cursor_expired(self, cursor):
+    async def _ensure_cursor_expired(self, cursor):
         pass
 
-    def test_DictCursor(self):
+    async def test_DictCursor(self, set_me_up):
+        await set_me_up(self)
         bob, jim, fred = self.bob.copy(), self.jim.copy(), self.fred.copy()
         #all assert test compare to the structure as would come out from MySQLdb
         conn = self.conn
@@ -50,7 +51,7 @@ class TestDictCursor(base.TrioMySQLTestCase):
         await c.execute("SELECT * from dictcursor where name='bob'")
         r = await c.fetchone()
         self.assertEqual(bob, r, "fetchone via DictCursor failed")
-        self._ensure_cursor_expired(c)
+        await self._ensure_cursor_expired(c)
 
         # same again, but via fetchall => tuple)
         await c.execute("SELECT * from dictcursor where name='bob'")
@@ -72,9 +73,10 @@ class TestDictCursor(base.TrioMySQLTestCase):
         await c.execute("SELECT * from dictcursor")
         r = await c.fetchmany(2)
         self.assertEqual([bob, jim], r, "fetchmany failed via DictCursor")
-        self._ensure_cursor_expired(c)
+        await self._ensure_cursor_expired(c)
 
-    def test_custom_dict(self):
+    async def test_custom_dict(self, set_me_up):
+        await set_me_up(self)
         class MyDict(dict): pass
 
         class MyDictCursor(self.cursor_type):
@@ -89,7 +91,7 @@ class TestDictCursor(base.TrioMySQLTestCase):
         await cur.execute("SELECT * FROM dictcursor WHERE name='bob'")
         r = await cur.fetchone()
         self.assertEqual(bob, r, "fetchone() returns MyDictCursor")
-        self._ensure_cursor_expired(cur)
+        await self._ensure_cursor_expired(cur)
 
         await cur.execute("SELECT * FROM dictcursor")
         r = await cur.fetchall()
@@ -105,12 +107,12 @@ class TestDictCursor(base.TrioMySQLTestCase):
         r = await cur.fetchmany(2)
         self.assertEqual([bob, jim], r,
                          "list failed via MyDictCursor")
-        self._ensure_cursor_expired(cur)
+        await self._ensure_cursor_expired(cur)
 
 
 class TestSSDictCursor(TestDictCursor):
     cursor_type = trio_mysql.cursors.SSDictCursor
 
-    def _ensure_cursor_expired(self, cursor):
+    async def _ensure_cursor_expired(self, cursor):
         list(await cursor.fetchall_unbuffered())
 

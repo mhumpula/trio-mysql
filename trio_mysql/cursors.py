@@ -49,6 +49,9 @@ class Cursor(object):
         self._warnings_handled = False
 
     def close(self):
+        raise RuntimeError("You need to call 'await .aclose()'")
+        
+    async def aclose(self):
         """
         Closing a cursor just exhausts all remaining data.
         """
@@ -56,7 +59,7 @@ class Cursor(object):
         if conn is None:
             return
         try:
-            while self.nextset():
+            while await self.nextset():
                 pass
         finally:
             self.connection = None
@@ -150,7 +153,7 @@ class Cursor(object):
         If args is a list or tuple, %s can be used as a placeholder in the query.
         If args is a dict, %(name)s can be used as a placeholder in the query.
         """
-        while self.nextset():
+        while await self.nextset():
             pass
 
         query = self.mogrify(query, args)
@@ -425,16 +428,16 @@ class SSCursor(Cursor):
     def _conv_row(self, row):
         return row
 
-    def close(self):
+    async def aclose(self):
         conn = self.connection
         if conn is None:
             return
 
         if self._result is not None and self._result is conn._result:
-            self._result._finish_unbuffered_query()
+            await self._result._finish_unbuffered_query()
 
         try:
-            while self.nextset():
+            while await self.nextset():
                 pass
         finally:
             self.connection = None

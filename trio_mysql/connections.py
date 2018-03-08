@@ -530,7 +530,7 @@ class Connection(object):
         Only used to limit size of "LOAD LOCAL INFILE" data packet smaller than default (16KB).
     :param auth_plugin_map: A dict of plugin names to a class that processes that plugin.
         The class will take the Connection object as the argument to the constructor.
-        The class needs an authenticate method taking an authentication packet as
+        The class needs an async ``authenticate`` method taking an authentication packet as
         an argument.  For the dialog plugin, a prompt(echo, prompt) method can be used
         (if no authenticate method) for returning a string from the user. (experimental)
     :param db: Alias for database. (for compatibility to MySQLdb)
@@ -1197,7 +1197,7 @@ class Connection(object):
         if plugin_class:
             try:
                 handler = plugin_class(self)
-                return handler.authenticate(auth_packet)
+                return await handler.authenticate(auth_packet)
             except AttributeError:
                 if plugin_name != b'dialog':
                     raise err.OperationalError(2059, "Authentication plugin '%s'" \
@@ -1229,7 +1229,7 @@ class Connection(object):
                 elif handler:
                     resp = 'no response - TypeError within plugin.prompt method'
                     try:
-                        resp = handler.prompt(echo, prompt)
+                        resp = await handler.prompt(echo, prompt)
                         await self.write_packet(resp + b'\0')
                     except AttributeError:
                         raise err.OperationalError(2059, "Authentication plugin '%s'" \

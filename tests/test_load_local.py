@@ -1,5 +1,5 @@
 from trio_mysql import cursors, OperationalError, Warning
-from trio_mysql.tests import base
+from tests import base
 
 import os
 import warnings
@@ -8,7 +8,8 @@ __all__ = ["TestLoadLocal"]
 
 
 class TestLoadLocal(base.TrioMySQLTestCase):
-    def test_no_file(self):
+    async def test_no_file(self, set_me_up):
+        await set_me_up(self)
         """Test load local infile when the file does not exist"""
         conn = self.connections[0]
         c = conn.cursor()
@@ -24,7 +25,8 @@ class TestLoadLocal(base.TrioMySQLTestCase):
             await c.execute("DROP TABLE test_load_local")
             c.close()
 
-    def test_load_file(self):
+    async def test_load_file(self, set_me_up):
+        await set_me_up(self)
         """Test load local infile with a valid file"""
         conn = self.connections[0]
         c = conn.cursor()
@@ -42,7 +44,8 @@ class TestLoadLocal(base.TrioMySQLTestCase):
         finally:
             await c.execute("DROP TABLE test_load_local")
 
-    def test_unbuffered_load_file(self):
+    async def test_unbuffered_load_file(self, set_me_up):
+        await set_me_up(self)
         """Test unbuffered load local infile with a valid file"""
         conn = self.connections[0]
         c = conn.cursor(cursors.SSCursor)
@@ -64,7 +67,8 @@ class TestLoadLocal(base.TrioMySQLTestCase):
             c = conn.cursor()
             await c.execute("DROP TABLE test_load_local")
 
-    def test_load_warnings(self):
+    async def test_load_warnings(self, set_me_up):
+        await set_me_up(self)
         """Test load local infile produces the appropriate warnings"""
         conn = self.connections[0]
         c = conn.cursor()

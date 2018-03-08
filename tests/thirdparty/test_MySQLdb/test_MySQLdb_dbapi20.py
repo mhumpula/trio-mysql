@@ -1,9 +1,9 @@
-from . import dbapi20
+from tests.thirdparty.test_MySQLdb import dbapi20
 import trio_mysql
-from trio_mysql.tests import base
+from tests import base
 
 
-class test_MySQLdb(dbapi20.DatabaseAPI20Test):
+class test_MySQLdb(dbapi20.TestDatabaseAPI20):
     driver = trio_mysql
     connect_args = ()
     connect_kw_args = base.TrioMySQLTestCase.databases[0].copy()
@@ -20,7 +20,8 @@ class test_MySQLdb(dbapi20.DatabaseAPI20Test):
     result set. MySQL always returns a result set; it's just that
     some things return empty result sets."""
 
-    def test_fetchall(self):
+    async def test_fetchall(self, set_me_up):
+        await set_me_up(self)
         con = self._connect()
         try:
             cur = con.cursor()
@@ -30,7 +31,7 @@ class test_MySQLdb(dbapi20.DatabaseAPI20Test):
             with pytest.raises(self.driver.Error):
                 await cur.fetchall()
 
-            self.executeDDL1(cur)
+            await self.executeDDL1(cur)
             for sql in self._populate():
                 await cur.execute(sql)
 
@@ -58,7 +59,7 @@ class test_MySQLdb(dbapi20.DatabaseAPI20Test):
                 )
             self.assertTrue(cur.rowcount in (-1,len(self.samples)))
 
-            self.executeDDL2(cur)
+            await self.executeDDL2(cur)
             await cur.execute('select name from %sbarflys' % self.table_prefix)
             rows = await cur.fetchall()
             self.assertTrue(cur.rowcount in (-1,0))
@@ -70,7 +71,8 @@ class test_MySQLdb(dbapi20.DatabaseAPI20Test):
         finally:
             con.close()
 
-    def test_fetchone(self):
+    async def test_fetchone(self, set_me_up):
+        await set_me_up(self)
         con = self._connect()
         try:
             cur = con.cursor()
@@ -82,7 +84,7 @@ class test_MySQLdb(dbapi20.DatabaseAPI20Test):
 
             # cursor.fetchone should raise an Error if called after
             # executing a query that cannnot return rows
-            self.executeDDL1(cur)
+            await self.executeDDL1(cur)
 ##             self.assertRaises(self.driver.Error,cur.fetchone)
 
             await cur.execute('select name from %sbooze' % self.table_prefix)
@@ -115,11 +117,12 @@ class test_MySQLdb(dbapi20.DatabaseAPI20Test):
             con.close()
 
     # Same complaint as for fetchall and fetchone
-    def test_rowcount(self):
+    async def test_rowcount(self, set_me_up):
+        await set_me_up(self)
         con = self._connect()
         try:
             cur = con.cursor()
-            self.executeDDL1(cur)
+            await self.executeDDL1(cur)
 ##             self.assertEqual(cur.rowcount,-1,
 ##                 'cursor.rowcount should be -1 after executing no-result '
 ##                 'statements'
@@ -136,7 +139,7 @@ class test_MySQLdb(dbapi20.DatabaseAPI20Test):
                 'cursor.rowcount should == number of rows returned, or '
                 'set to -1 after executing a select statement'
                 )
-            self.executeDDL2(cur)
+            await self.executeDDL2(cur)
 ##             self.assertEqual(cur.rowcount,-1,
 ##                 'cursor.rowcount not being reset to -1 after executing '
 ##                 'no-result statements'
@@ -144,10 +147,11 @@ class test_MySQLdb(dbapi20.DatabaseAPI20Test):
         finally:
             con.close()
 
-    def test_callproc(self):
+    async def test_callproc(self, set_me_up):
+        await set_me_up(self)
         pass # performed in test_MySQL_capabilities
 
-    def help_nextset_setUp(self,cur):
+    async def help_nextset_setUp(self,cur):
         ''' Should create a procedure called deleteme
             that returns two result sets, first the
             number of rows in booze then "name from booze"
@@ -161,11 +165,12 @@ class test_MySQLdb(dbapi20.DatabaseAPI20Test):
         """ % dict(tp=self.table_prefix)
         await cur.execute(sql)
 
-    def help_nextset_tearDown(self,cur):
+    async def help_nextset_tearDown(self,cur):
         'If cleaning up is needed after nextSetTest'
         await cur.execute("drop procedure deleteme")
 
-    def test_nextset(self):
+    async def test_nextset(self, set_me_up):
+        await set_me_up(self)
         from warnings import warn
         con = self._connect()
         try:
@@ -174,12 +179,12 @@ class test_MySQLdb(dbapi20.DatabaseAPI20Test):
                 return
 
             try:
-                self.executeDDL1(cur)
+                await self.executeDDL1(cur)
                 sql=self._populate()
                 for sql in self._populate():
                     await cur.execute(sql)
 
-                self.help_nextset_setUp(cur)
+                await self.help_nextset_setUp(cur)
 
                 await cur.callproc('deleteme')
                 numberofrows=await cur.fetchone()
@@ -196,7 +201,7 @@ class test_MySQLdb(dbapi20.DatabaseAPI20Test):
                     #     Warning)
                 #assert s == None,'No more return sets, should return None'
             finally:
-                self.help_nextset_tearDown(cur)
+                await self.help_nextset_tearDown(cur)
 
         finally:
             con.close()

@@ -1,16 +1,17 @@
 import pytest
 
-from trio_mysql.tests import base
+from tests import base
 from trio_mysql import util
 
 
 class TestNextset(base.TrioMySQLTestCase):
 
-    def setUp(self):
-        super(TestNextset, self).setUp()
+    async def setUp(self):
+        await super().setUp()
         self.con = self.connections[0]
 
-    def test_nextset(self):
+    async def test_nextset(self, set_me_up):
+        await set_me_up(self)
         cur = self.con.cursor()
         await cur.execute("SELECT 1; SELECT 2;")
         self.assertEqual([(1,)], list(cur))
@@ -21,7 +22,8 @@ class TestNextset(base.TrioMySQLTestCase):
         self.assertEqual([(2,)], list(cur))
         assert await cur.nextset() is None
 
-    def test_skip_nextset(self):
+    async def test_skip_nextset(self, set_me_up):
+        await set_me_up(self)
         cur = self.con.cursor()
         await cur.execute("SELECT 1; SELECT 2;")
         self.assertEqual([(1,)], list(cur))
@@ -29,7 +31,8 @@ class TestNextset(base.TrioMySQLTestCase):
         await cur.execute("SELECT 42")
         self.assertEqual([(42,)], list(cur))
 
-    def test_ok_and_next(self):
+    async def test_ok_and_next(self, set_me_up):
+        await set_me_up(self)
         cur = self.con.cursor()
         await cur.execute("SELECT 1; commit; SELECT 2;")
         self.assertEqual([(1,)], list(cur))
@@ -39,7 +42,8 @@ class TestNextset(base.TrioMySQLTestCase):
         assert not await cur.nextset()
 
     @pytest.mark.xfail
-    def test_multi_cursor(self):
+    async def test_multi_cursor(self, set_me_up):
+        await set_me_up(self)
         cur1 = self.con.cursor()
         cur2 = self.con.cursor()
 
@@ -55,7 +59,8 @@ class TestNextset(base.TrioMySQLTestCase):
         self.assertEqual([(2,)], list(cur1))
         assert await cur1.nextset() is None
 
-    def test_multi_statement_warnings(self):
+    async def test_multi_statement_warnings(self, set_me_up):
+        await set_me_up(self)
         cursor = self.con.cursor()
 
         try:

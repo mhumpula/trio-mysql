@@ -15,6 +15,7 @@ __version__ = '$Revision$'[11:-2]
 __author__ = 'Stuart Bishop <zen@shangri-la.dropbear.id.au>'
 
 import time
+import pytest
 
 # $Log$
 # Revision 1.1.2.1  2006/02/25 03:44:32  adustman
@@ -100,19 +101,19 @@ class TestDatabaseAPI20:
 
     # Some drivers may need to override these helpers, for example adding
     # a 'commit' after the execute.
-    def executeDDL1(self,cursor):
+    async def executeDDL1(self,cursor):
         await cursor.execute(self.ddl1)
 
-    def executeDDL2(self,cursor):
+    async def executeDDL2(self,cursor):
         await cursor.execute(self.ddl2)
 
-    def setUp(self):
+    async def setUp(self):
         ''' self.drivers should override this method to perform required setup
             if any is necessary, such as creating the database.
         '''
         pass
 
-    def tearDown(self):
+    async def tearDown(self):
         ''' self.drivers should override this method to perform required cleanup
             if any is necessary, such as deleting the test database.
             The default drops the tables that may be created.
@@ -139,11 +140,13 @@ class TestDatabaseAPI20:
         except AttributeError:
             self.fail("No connect method found in self.driver module")
 
-    def test_connect(self):
+    async def test_connect(self, set_me_up):
+        await set_me_up(self)
         con = self._connect()
         con.close()
 
-    def test_apilevel(self):
+    async def test_apilevel(self, set_me_up):
+        await set_me_up(self)
         try:
             # Must exist
             apilevel = self.driver.apilevel
@@ -152,7 +155,8 @@ class TestDatabaseAPI20:
         except AttributeError:
             self.fail("Driver doesn't define apilevel")
 
-    def test_threadsafety(self):
+    async def test_threadsafety(self, set_me_up):
+        await set_me_up(self)
         try:
             # Must exist
             threadsafety = self.driver.threadsafety
@@ -161,7 +165,8 @@ class TestDatabaseAPI20:
         except AttributeError:
             self.fail("Driver doesn't define threadsafety")
 
-    def test_paramstyle(self):
+    async def test_paramstyle(self, set_me_up):
+        await set_me_up(self)
         try:
             # Must exist
             paramstyle = self.driver.paramstyle
@@ -172,7 +177,8 @@ class TestDatabaseAPI20:
         except AttributeError:
             self.fail("Driver doesn't define paramstyle")
 
-    def test_Exceptions(self):
+    async def test_Exceptions(self, set_me_up):
+        await set_me_up(self)
         # Make sure required exceptions exist, and are in the
         # defined heirarchy.
         self.assertTrue(issubclass(self.driver.Warning,Exception))
@@ -199,7 +205,8 @@ class TestDatabaseAPI20:
             issubclass(self.driver.NotSupportedError,self.driver.Error)
             )
 
-    def test_ExceptionsAsConnectionAttributes(self):
+    async def test_ExceptionsAsConnectionAttributes(self, set_me_up):
+        await set_me_up(self)
         # OPTIONAL EXTENSION
         # Test for the optional DB API 2.0 extension, where the exceptions
         # are exposed as attributes on the Connection object
@@ -219,7 +226,8 @@ class TestDatabaseAPI20:
         self.assertTrue(con.NotSupportedError is drv.NotSupportedError)
 
 
-    def test_commit(self):
+    async def test_commit(self, set_me_up):
+        await set_me_up(self)
         con = self._connect()
         try:
             # Commit must work, even if it doesn't do anything
@@ -227,7 +235,8 @@ class TestDatabaseAPI20:
         finally:
             con.close()
 
-    def test_rollback(self):
+    async def test_rollback(self, set_me_up):
+        await set_me_up(self)
         con = self._connect()
         # If rollback is defined, it should either work or throw
         # the documented exception
@@ -237,21 +246,23 @@ class TestDatabaseAPI20:
             except self.driver.NotSupportedError:
                 pass
 
-    def test_cursor(self):
+    async def test_cursor(self, set_me_up):
+        await set_me_up(self)
         con = self._connect()
         try:
             cur = con.cursor()
         finally:
             con.close()
 
-    def test_cursor_isolation(self):
+    async def test_cursor_isolation(self, set_me_up):
+        await set_me_up(self)
         con = self._connect()
         try:
             # Make sure cursors created from the same connection have
             # the documented transaction isolation level
             cur1 = con.cursor()
             cur2 = con.cursor()
-            self.executeDDL1(cur1)
+            await self.executeDDL1(cur1)
             await cur1.execute("insert into %sbooze values ('Victoria Bitter')" % (
                 self.table_prefix
                 ))
@@ -263,11 +274,12 @@ class TestDatabaseAPI20:
         finally:
             con.close()
 
-    def test_description(self):
+    async def test_description(self, set_me_up):
+        await set_me_up(self)
         con = self._connect()
         try:
             cur = con.cursor()
-            self.executeDDL1(cur)
+            await self.executeDDL1(cur)
             self.assertEqual(cur.description,None,
                 'cursor.description should be none after executing a '
                 'statement that can return no rows (such as DDL)'
@@ -288,7 +300,7 @@ class TestDatabaseAPI20:
                 )
 
             # Make sure self.description gets reset
-            self.executeDDL2(cur)
+            await self.executeDDL2(cur)
             self.assertEqual(cur.description,None,
                 'cursor.description not being set to None when executing '
                 'no-result statements (eg. DDL)'
@@ -296,11 +308,12 @@ class TestDatabaseAPI20:
         finally:
             con.close()
 
-    def test_rowcount(self):
+    async def test_rowcount(self, set_me_up):
+        await set_me_up(self)
         con = self._connect()
         try:
             cur = con.cursor()
-            self.executeDDL1(cur)
+            await self.executeDDL1(cur)
             self.assertEqual(cur.rowcount,-1,
                 'cursor.rowcount should be -1 after executing no-result '
                 'statements'
@@ -317,7 +330,7 @@ class TestDatabaseAPI20:
                 'cursor.rowcount should == number of rows returned, or '
                 'set to -1 after executing a select statement'
                 )
-            self.executeDDL2(cur)
+            await self.executeDDL2(cur)
             self.assertEqual(cur.rowcount,-1,
                 'cursor.rowcount not being reset to -1 after executing '
                 'no-result statements'
@@ -326,7 +339,8 @@ class TestDatabaseAPI20:
             con.close()
 
     lower_func = 'lower'
-    def test_callproc(self):
+    async def test_callproc(self, set_me_up):
+        await set_me_up(self)
         con = self._connect()
         try:
             cur = con.cursor()
@@ -345,7 +359,8 @@ class TestDatabaseAPI20:
         finally:
             con.close()
 
-    def test_close(self):
+    async def test_close(self, set_me_up):
+        await set_me_up(self)
         con = self._connect()
         try:
             cur = con.cursor()
@@ -354,7 +369,8 @@ class TestDatabaseAPI20:
 
         # cursor.execute should raise an Error if called after connection
         # closed
-        self.assertRaises(self.driver.Error,self.executeDDL1,cur)
+        with pytest.raises(self.driver.Error):
+            await self.executeDDL1(cur)
 
         # connection.commit should raise an Error if called after connection'
         # closed.'
@@ -363,16 +379,17 @@ class TestDatabaseAPI20:
         # connection.close should raise an Error if called more than once
         self.assertRaises(self.driver.Error,con.close)
 
-    def test_execute(self):
+    async def test_execute(self, set_me_up):
+        await set_me_up(self)
         con = self._connect()
         try:
             cur = con.cursor()
-            self._paraminsert(cur)
+            await self._paraminsert(cur)
         finally:
             con.close()
 
-    def _paraminsert(self,cur):
-        self.executeDDL1(cur)
+    async def _paraminsert(self,cur):
+        await self.executeDDL1(cur)
         await cur.execute("insert into %sbooze values ('Victoria Bitter')" % (
             self.table_prefix
             ))
@@ -421,11 +438,12 @@ class TestDatabaseAPI20:
             'incorrectly'
             )
 
-    def test_executemany(self):
+    async def test_executemany(self, set_me_up):
+        await set_me_up(self)
         con = self._connect()
         try:
             cur = con.cursor()
-            self.executeDDL1(cur)
+            await self.executeDDL1(cur)
             largs = [ ("Cooper's",) , ("Boag's",) ]
             margs = [ {'beer': "Cooper's"}, {'beer': "Boag's"} ]
             if self.driver.paramstyle == 'qmark':
@@ -473,7 +491,8 @@ class TestDatabaseAPI20:
         finally:
             con.close()
 
-    def test_fetchone(self):
+    async def test_fetchone(self, set_me_up):
+        await set_me_up(self)
         con = self._connect()
         try:
             cur = con.cursor()
@@ -485,7 +504,7 @@ class TestDatabaseAPI20:
 
             # cursor.fetchone should raise an Error if called after
             # executing a query that cannnot return rows
-            self.executeDDL1(cur)
+            await self.executeDDL1(cur)
             with pytest.raises(self.driver.Error):
                 await cur.fetchone()
 
@@ -538,7 +557,8 @@ class TestDatabaseAPI20:
             ]
         return populate
 
-    def test_fetchmany(self):
+    async def test_fetchmany(self, set_me_up):
+        await set_me_up(self)
         con = self._connect()
         try:
             cur = con.cursor()
@@ -548,7 +568,7 @@ class TestDatabaseAPI20:
             with pytest.raises(self.driver.Error):
                 await cur.fetchmany(4)
 
-            self.executeDDL1(cur)
+            await self.executeDDL1(cur)
             for sql in self._populate():
                 await cur.execute(sql)
 
@@ -609,7 +629,7 @@ class TestDatabaseAPI20:
                 )
             self.assertTrue(cur.rowcount in (-1,6))
 
-            self.executeDDL2(cur)
+            await self.executeDDL2(cur)
             await cur.execute('select name from %sbarflys' % self.table_prefix)
             r = await cur.fetchmany() # Should get empty sequence
             self.assertEqual(len(r),0,
@@ -621,7 +641,8 @@ class TestDatabaseAPI20:
         finally:
             con.close()
 
-    def test_fetchall(self):
+    async def test_fetchall(self, set_me_up):
+        await set_me_up(self)
         con = self._connect()
         try:
             cur = con.cursor()
@@ -631,7 +652,7 @@ class TestDatabaseAPI20:
             with pytest.raises(self.driver.Error):
                 await cur.fetchall()
 
-            self.executeDDL1(cur)
+            await self.executeDDL1(cur)
             for sql in self._populate():
                 await cur.execute(sql)
 
@@ -660,7 +681,7 @@ class TestDatabaseAPI20:
                 )
             self.assertTrue(cur.rowcount in (-1,len(self.samples)))
 
-            self.executeDDL2(cur)
+            await self.executeDDL2(cur)
             await cur.execute('select name from %sbarflys' % self.table_prefix)
             rows = await cur.fetchall()
             self.assertTrue(cur.rowcount in (-1,0))
@@ -672,11 +693,12 @@ class TestDatabaseAPI20:
         finally:
             con.close()
 
-    def test_mixedfetch(self):
+    async def test_mixedfetch(self, set_me_up):
+        await set_me_up(self)
         con = self._connect()
         try:
             cur = con.cursor()
-            self.executeDDL1(cur)
+            await self.executeDDL1(cur)
             for sql in self._populate():
                 await cur.execute(sql)
 
@@ -725,7 +747,8 @@ class TestDatabaseAPI20:
         raise NotImplementedError('Helper not implemented')
         #await cur.execute("drop procedure deleteme")
 
-    def test_nextset(self):
+    async def test_nextset(self, set_me_up):
+        await set_me_up(self)
         con = self._connect()
         try:
             cur = con.cursor()
@@ -733,7 +756,7 @@ class TestDatabaseAPI20:
                 return
 
             try:
-                self.executeDDL1(cur)
+                await self.executeDDL1(cur)
                 sql=self._populate()
                 for sql in self._populate():
                     await cur.execute(sql)
@@ -754,10 +777,12 @@ class TestDatabaseAPI20:
         finally:
             con.close()
 
-    def test_nextset(self):
+    async def test_nextset(self, set_me_up):
+        await set_me_up(self)
         raise NotImplementedError('Drivers need to override this test')
 
-    def test_arraysize(self):
+    async def test_arraysize(self, set_me_up):
+        await set_me_up(self)
         # Not much here - rest of the tests for this are in test_fetchmany
         con = self._connect()
         try:
@@ -768,35 +793,39 @@ class TestDatabaseAPI20:
         finally:
             con.close()
 
-    def test_setinputsizes(self):
+    async def test_setinputsizes(self, set_me_up):
+        await set_me_up(self)
         con = self._connect()
         try:
             cur = con.cursor()
             cur.setinputsizes( (25,) )
-            self._paraminsert(cur) # Make sure cursor still works
+            await self._paraminsert(cur) # Make sure cursor still works
         finally:
             con.close()
 
-    def test_setoutputsize_basic(self):
+    async def test_setoutputsize_basic(self, set_me_up):
+        await set_me_up(self)
         # Basic test is to make sure setoutputsize doesn't blow up
         con = self._connect()
         try:
             cur = con.cursor()
             cur.setoutputsize(1000)
             cur.setoutputsize(2000,0)
-            self._paraminsert(cur) # Make sure the cursor still works
+            await self._paraminsert(cur) # Make sure the cursor still works
         finally:
             con.close()
 
-    def test_setoutputsize(self):
+    async def test_setoutputsize(self, set_me_up):
+        await set_me_up(self)
         # Real test for setoutputsize is driver dependant
         raise NotImplementedError('Driver need to override this test')
 
-    def test_None(self):
+    async def test_None(self, set_me_up):
+        await set_me_up(self)
         con = self._connect()
         try:
             cur = con.cursor()
-            self.executeDDL1(cur)
+            await self.executeDDL1(cur)
             await cur.execute('insert into %sbooze values (NULL)' % self.table_prefix)
             await cur.execute('select name from %sbooze' % self.table_prefix)
             r = await cur.fetchall()
@@ -806,19 +835,22 @@ class TestDatabaseAPI20:
         finally:
             con.close()
 
-    def test_Date(self):
+    async def test_Date(self, set_me_up):
+        await set_me_up(self)
         d1 = self.driver.Date(2002,12,25)
         d2 = self.driver.DateFromTicks(time.mktime((2002,12,25,0,0,0,0,0,0)))
         # Can we assume this? API doesn't specify, but it seems implied
         # self.assertEqual(str(d1),str(d2))
 
-    def test_Time(self):
+    async def test_Time(self, set_me_up):
+        await set_me_up(self)
         t1 = self.driver.Time(13,45,30)
         t2 = self.driver.TimeFromTicks(time.mktime((2001,1,1,13,45,30,0,0,0)))
         # Can we assume this? API doesn't specify, but it seems implied
         # self.assertEqual(str(t1),str(t2))
 
-    def test_Timestamp(self):
+    async def test_Timestamp(self, set_me_up):
+        await set_me_up(self)
         t1 = self.driver.Timestamp(2002,12,25,13,45,30)
         t2 = self.driver.TimestampFromTicks(
             time.mktime((2002,12,25,13,45,30,0,0,0))
@@ -826,31 +858,37 @@ class TestDatabaseAPI20:
         # Can we assume this? API doesn't specify, but it seems implied
         # self.assertEqual(str(t1),str(t2))
 
-    def test_Binary(self):
+    async def test_Binary(self, set_me_up):
+        await set_me_up(self)
         b = self.driver.Binary(b'Something')
         b = self.driver.Binary(b'')
 
-    def test_STRING(self):
+    async def test_STRING(self, set_me_up):
+        await set_me_up(self)
         self.assertTrue(hasattr(self.driver,'STRING'),
             'module.STRING must be defined'
             )
 
-    def test_BINARY(self):
+    async def test_BINARY(self, set_me_up):
+        await set_me_up(self)
         self.assertTrue(hasattr(self.driver,'BINARY'),
             'module.BINARY must be defined.'
             )
 
-    def test_NUMBER(self):
+    async def test_NUMBER(self, set_me_up):
+        await set_me_up(self)
         self.assertTrue(hasattr(self.driver,'NUMBER'),
             'module.NUMBER must be defined.'
             )
 
-    def test_DATETIME(self):
+    async def test_DATETIME(self, set_me_up):
+        await set_me_up(self)
         self.assertTrue(hasattr(self.driver,'DATETIME'),
             'module.DATETIME must be defined.'
             )
 
-    def test_ROWID(self):
+    async def test_ROWID(self, set_me_up):
+        await set_me_up(self)
         self.assertTrue(hasattr(self.driver,'ROWID'),
             'module.ROWID must be defined.'
             )

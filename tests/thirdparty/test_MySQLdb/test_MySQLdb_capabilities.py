@@ -1,11 +1,11 @@
 from . import capabilities
 import trio_mysql
-from trio_mysql.tests import base
+from tests import base
 import warnings
 
 warnings.filterwarnings('error')
 
-class test_MySQLdb(capabilities.DatabaseTest):
+class test_MySQLdb(capabilities.TestDatabase):
 
     db_module = trio_mysql
     connect_args = ()
@@ -20,7 +20,8 @@ class test_MySQLdb(capabilities.DatabaseTest):
     def quote_identifier(self, ident):
         return "`%s`" % ident
 
-    def test_TIME(self):
+    async def test_TIME(self, set_me_up):
+        await set_me_up(self)
         from datetime import timedelta
         def generator(row,col):
             return timedelta(0, row*8000)
@@ -28,7 +29,8 @@ class test_MySQLdb(capabilities.DatabaseTest):
                  ('col1 TIME',),
                  generator)
 
-    def test_TINYINT(self):
+    async def test_TINYINT(self, set_me_up):
+        await set_me_up(self)
         # Number data
         def generator(row,col):
             v = (row*row) % 256
@@ -39,7 +41,8 @@ class test_MySQLdb(capabilities.DatabaseTest):
             ('col1 TINYINT',),
             generator)
 
-    def test_stored_procedures(self):
+    async def test_stored_procedures(self, set_me_up):
+        await set_me_up(self)
         db = self.connection
         c = self.cursor
         try:
@@ -65,7 +68,8 @@ class test_MySQLdb(capabilities.DatabaseTest):
             await c.execute("DROP PROCEDURE IF EXISTS test_sp")
             await c.execute('drop table %s' % (self.table))
 
-    def test_small_CHAR(self):
+    async def test_small_CHAR(self, set_me_up):
+        await set_me_up(self)
         # Character data
         def generator(row,col):
             i = ((row+1)*(col+1)+62)%256
@@ -76,21 +80,26 @@ class test_MySQLdb(capabilities.DatabaseTest):
             ('col1 char(1)','col2 char(1)'),
             generator)
 
-    def test_bug_2671682(self):
+    async def test_bug_2671682(self, set_me_up):
+        await set_me_up(self)
         from trio_mysql.constants import ER
         try:
             await self.cursor.execute("describe some_non_existent_table");
         except self.connection.ProgrammingError as msg:
             self.assertEqual(msg.args[0], ER.NO_SUCH_TABLE)
 
-    def test_ping(self):
+    async def test_ping(self, set_me_up):
+        await set_me_up(self)
         await self.connection.ping()
 
-    def test_literal_int(self):
+    async def test_literal_int(self, set_me_up):
+        await set_me_up(self)
         self.assertTrue("2" == self.connection.literal(2))
 
-    def test_literal_float(self):
+    async def test_literal_float(self, set_me_up):
+        await set_me_up(self)
         self.assertTrue("3.1415" == self.connection.literal(3.1415))
 
-    def test_literal_string(self):
+    async def test_literal_string(self, set_me_up):
+        await set_me_up(self)
         self.assertTrue("'foo'" == self.connection.literal("foo"))

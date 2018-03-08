@@ -5,7 +5,7 @@ import re
 import warnings
 
 import trio_mysql
-from .._compat import CPYTHON
+from trio_mysql._compat import CPYTHON
 
 
 class TrioMySQLTestCase:
@@ -38,17 +38,17 @@ class TrioMySQLTestCase:
         )
         return server_version_tuple >= version_tuple
 
-    def setUp(self):
+    async def setUp(self):
         self.connections = []
         for params in self.databases:
             self.connections.append(trio_mysql.connect(**params))
         self.addCleanup(self._teardown_connections)
 
-    def _teardown_connections(self):
+    async def _teardown_connections(self):
         for connection in self.connections:
-            connection.close()
+            await connection.aclose()
 
-    def safe_create_table(self, connection, tablename, ddl, cleanup=True):
+    async def safe_create_table(self, connection, tablename, ddl, cleanup=True):
         """create a table.
 
         Ensures any existing version of that table is first dropped.
@@ -66,7 +66,7 @@ class TrioMySQLTestCase:
         if cleanup:
             self.addCleanup(self.drop_table, connection, tablename)
 
-    def drop_table(self, connection, tablename):
+    async def drop_table(self, connection, tablename):
         cursor = connection.cursor()
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
