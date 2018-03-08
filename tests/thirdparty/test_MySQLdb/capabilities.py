@@ -40,7 +40,7 @@ class TestDatabase:
 
     def table_exists(self, name):
         try:
-            self.cursor.execute('select * from %s where 1=0' % name)
+            await self.cursor.execute('select * from %s where 1=0' % name)
         except Exception:
             return False
         else:
@@ -68,7 +68,7 @@ class TestDatabase:
 
         """
         self.table = self.new_table_name()
-        self.cursor.execute('CREATE TABLE %s (%s) %s' %
+        await self.cursor.execute('CREATE TABLE %s (%s) %s' %
                             (self.table,
                              ',\n'.join(columndefs),
                              self.create_table_extra))
@@ -83,11 +83,11 @@ class TestDatabase:
                  for i in range(self.rows) ]
         if self.debug:
             print(data)
-        self.cursor.executemany(insert_statement, data)
-        self.connection.commit()
+        await self.cursor.executemany(insert_statement, data)
+        await self.connection.commit()
         # verify
-        self.cursor.execute('select * from %s' % self.table)
-        l = self.cursor.fetchall()
+        await self.cursor.execute('select * from %s' % self.table)
+        l = await self.cursor.fetchall()
         if self.debug:
             print(l)
         self.assertEqual(len(l), self.rows)
@@ -97,7 +97,7 @@ class TestDatabase:
                     self.assertEqual(l[i][j], generator(i,j))
         finally:
             if not self.debug:
-                self.cursor.execute('drop table %s' % (self.table))
+                await self.cursor.execute('drop table %s' % (self.table))
 
     def test_transactions(self):
         columndefs = ( 'col1 INT', 'col2 VARCHAR(255)')
@@ -110,27 +110,27 @@ class TestDatabase:
                              ','.join(['%s'] * len(columndefs))))
         data = [ [ generator(i,j) for j in range(len(columndefs)) ]
                  for i in range(self.rows) ]
-        self.cursor.executemany(insert_statement, data)
+        await self.cursor.executemany(insert_statement, data)
         # verify
-        self.connection.commit()
-        self.cursor.execute('select * from %s' % self.table)
-        l = self.cursor.fetchall()
+        await self.connection.commit()
+        await self.cursor.execute('select * from %s' % self.table)
+        l = await self.cursor.fetchall()
         self.assertEqual(len(l), self.rows)
         for i in range(self.rows):
             for j in range(len(columndefs)):
                 self.assertEqual(l[i][j], generator(i,j))
         delete_statement = 'delete from %s where col1=%%s' % self.table
-        self.cursor.execute(delete_statement, (0,))
-        self.cursor.execute('select col1 from %s where col1=%s' % \
+        await self.cursor.execute(delete_statement, (0,))
+        await self.cursor.execute('select col1 from %s where col1=%s' % \
                             (self.table, 0))
-        l = self.cursor.fetchall()
+        l = await self.cursor.fetchall()
         self.assertFalse(l, "DELETE didn't work")
-        self.connection.rollback()
-        self.cursor.execute('select col1 from %s where col1=%s' % \
+        await self.connection.rollback()
+        await self.cursor.execute('select col1 from %s where col1=%s' % \
                             (self.table, 0))
-        l = self.cursor.fetchall()
+        l = await self.cursor.fetchall()
         self.assertTrue(len(l) == 1, "ROLLBACK didn't work")
-        self.cursor.execute('drop table %s' % (self.table))
+        await self.cursor.execute('drop table %s' % (self.table))
 
     def test_truncation(self):
         columndefs = ( 'col1 INT', 'col2 VARCHAR(255)')
@@ -143,7 +143,7 @@ class TestDatabase:
                              ','.join(['%s'] * len(columndefs))))
 
         try:
-            self.cursor.execute(insert_statement, (0, '0'*256))
+            await self.cursor.execute(insert_statement, (0, '0'*256))
         except Warning:
             if self.debug: print(self.cursor.messages)
         except self.connection.DataError:
@@ -151,14 +151,14 @@ class TestDatabase:
         else:
             self.fail("Over-long column did not generate warnings/exception with single insert")
 
-        self.connection.rollback()
+        await self.connection.rollback()
 
         try:
             for i in range(self.rows):
                 data = []
                 for j in range(len(columndefs)):
                     data.append(generator(i,j))
-                self.cursor.execute(insert_statement,tuple(data))
+                await self.cursor.execute(insert_statement,tuple(data))
         except Warning:
             if self.debug: print(self.cursor.messages)
         except self.connection.DataError:
@@ -166,12 +166,12 @@ class TestDatabase:
         else:
             self.fail("Over-long columns did not generate warnings/exception with execute()")
 
-        self.connection.rollback()
+        await self.connection.rollback()
 
         try:
             data = [ [ generator(i,j) for j in range(len(columndefs)) ]
                      for i in range(self.rows) ]
-            self.cursor.executemany(insert_statement, data)
+            await self.cursor.executemany(insert_statement, data)
         except Warning:
             if self.debug: print(self.cursor.messages)
         except self.connection.DataError:
@@ -179,8 +179,8 @@ class TestDatabase:
         else:
             self.fail("Over-long columns did not generate warnings/exception with executemany()")
 
-        self.connection.rollback()
-        self.cursor.execute('drop table %s' % (self.table))
+        await self.connection.rollback()
+        await self.cursor.execute('drop table %s' % (self.table))
 
     def test_CHAR(self):
         # Character data

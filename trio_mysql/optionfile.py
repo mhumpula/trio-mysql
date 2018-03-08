@@ -1,5 +1,5 @@
 
-import ConfigParser as configparser
+import configparser
 
 
 class Parser(configparser.RawConfigParser):

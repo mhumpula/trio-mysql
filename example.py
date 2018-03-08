@@ -1,20 +1,16 @@
 #!/usr/bin/env python
-from __future__ import print_function
-
+import trio
 import trio_mysql
 
-conn = trio_mysql.connect(host='localhost', port=3306, user='root', passwd='', db='mysql')
+async def main():
+    async with trio_mysql.connect(host='localhost', port=3306, user='root', passwd='', db='mysql') as conn:
+        async with conn.cursor() as cur:
 
-cur = conn.cursor()
+            await cur.execute("SELECT Host,User FROM user")
+            print(cur.description)
 
-cur.execute("SELECT Host,User FROM user")
+            print()
 
-print(cur.description)
+            async for row in cur:
+                print(row)
 
-print()
-
-for row in cur:
-    print(row)
-
-cur.close()
-conn.close()

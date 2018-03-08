@@ -82,6 +82,8 @@ def Connect(*args, **kwargs):
     """
     Connect to the database; see connections.Connection.__init__() for
     more information.
+
+    Note that you need to use ``async with`` in order to actually use the connection!
     """
     from .connections import Connection
     return Connection(*args, **kwargs)
@@ -100,8 +102,7 @@ def get_client_info():  # for MySQLdb compatibility
 
 connect = Connection = Connect
 
-# we include a doctored version_info here for MySQLdb compatibility
-version_info = (1, 3, 12, "final", 0)
+version_info = (0, 1, 0, "alpha", 0)
 
 NULL = "NULL"
 
@@ -109,14 +110,6 @@ __version__ = get_client_info()
 
 def thread_safe():
     return True  # match MySQLdb.thread_safe()
-
-def install_as_MySQLdb():
-    """
-    After this function is called, any application that imports MySQLdb or
-    _mysql will unwittingly actually use
-    """
-    sys.modules["MySQLdb"] = sys.modules["_mysql"] = sys.modules["trio_mysql"]
-
 
 __all__ = [
     'BINARY', 'Binary', 'Connect', 'Connection', 'DATE', 'Date',
@@ -129,6 +122,5 @@ __all__ = [
     'escape_dict', 'escape_sequence', 'escape_string', 'get_client_info',
     'paramstyle', 'threadsafety', 'version_info',
 
-    "install_as_MySQLdb",
     "NULL", "__version__",
 ]

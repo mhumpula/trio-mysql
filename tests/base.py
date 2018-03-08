@@ -60,8 +60,8 @@ class TrioMySQLTestCase:
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            cursor.execute("drop table if exists `%s`" % (tablename,))
-        cursor.execute(ddl)
+            await cursor.execute("drop table if exists `%s`" % (tablename,))
+        await cursor.execute(ddl)
         cursor.close()
         if cleanup:
             self.addCleanup(self.drop_table, connection, tablename)
@@ -70,7 +70,7 @@ class TrioMySQLTestCase:
         cursor = connection.cursor()
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            cursor.execute("drop table if exists `%s`" % (tablename,))
+            await cursor.execute("drop table if exists `%s`" % (tablename,))
         cursor.close()
 
     def safe_gc_collect(self):

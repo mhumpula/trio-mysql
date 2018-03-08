@@ -1,4 +1,4 @@
-from ._compat import str, int, JYTHON, IRONPYTHON, chr
+from ._compat import JYTHON, IRONPYTHON
 
 import datetime
 from decimal import Decimal
@@ -361,7 +361,8 @@ encoders = {
     datetime.time: escape_time,
     time.struct_time: escape_struct_time,
     Decimal: escape_object,
-    bytes: escape_bytes
+    bytes: escape_bytes,
+}
 
 decoders = {
     FIELD_TYPE.BIT: convert_bit,

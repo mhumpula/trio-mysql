@@ -34,24 +34,28 @@ The following examples make use of a simple table
                                  charset='utf8mb4',
                                  cursorclass=trio_mysql.cursors.DictCursor)
 
-    try:
-        with connection.cursor() as cursor:
-            # Create a new record
-            sql = "INSERT INTO `users` (`email`, `password`) VALUES (%s, %s)"
-            cursor.execute(sql, ('webmaster@python.org', 'very-secret'))
+    async with connection:
+        async with connection.transaction():
+            async with connection.cursor() as cursor:
+                # Create a new record
+                sql = "INSERT INTO `users` (`email`, `password`) VALUES (%s, %s)"
+                await cursor.execute(sql, ('webmaster@python.org', 'very-secret'))
+        # Transactions are auto-committed if they're exited without
+        # error.
 
-        # connection is not autocommit by default. So you must commit to save
-        # your changes.
-        connection.commit()
-
-        with connection.cursor() as cursor:
+        async with connection.cursor() as cursor:
             # Read a single record
             sql = "SELECT `id`, `password` FROM `users` WHERE `email`=%s"
-            cursor.execute(sql, ('webmaster@python.org',))
-            result = cursor.fetchone()
+            await cursor.execute(sql, ('webmaster@python.org',))
+            result = await cursor.fetchone()
             print(result)
-    finally:
-        connection.close()
+
+        # When reading, you should periodically commit (or roll back) so
+        # that the database can release any read locks.
+        await connection.commit()
+        # In this case it's superfluous because we end the connection
+        # anyway.
+
 
 This example will print:
 

@@ -25,20 +25,20 @@ class TestOldIssues(base.TrioMySQLTestCase):
         c = conn.cursor()
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore")
-            c.execute("drop table if exists issue3")
-        c.execute("create table issue3 (d date, t time, dt datetime, ts timestamp)")
+            await c.execute("drop table if exists issue3")
+        await c.execute("create table issue3 (d date, t time, dt datetime, ts timestamp)")
         try:
-            c.execute("insert into issue3 (d, t, dt, ts) values (%s,%s,%s,%s)", (None, None, None, None))
-            c.execute("select d from issue3")
-            self.assertEqual(None, c.fetchone()[0])
-            c.execute("select t from issue3")
-            self.assertEqual(None, c.fetchone()[0])
-            c.execute("select dt from issue3")
-            self.assertEqual(None, c.fetchone()[0])
-            c.execute("select ts from issue3")
-            self.assertTrue(isinstance(c.fetchone()[0], datetime.datetime))
+            await c.execute("insert into issue3 (d, t, dt, ts) values (%s,%s,%s,%s)", (None, None, None, None))
+            await c.execute("select d from issue3")
+            self.assertEqual(None, (await c.fetchone())[0])
+            await c.execute("select t from issue3")
+            self.assertEqual(None, (await c.fetchone())[0])
+            await c.execute("select dt from issue3")
+            self.assertEqual(None, (await c.fetchone())[0])
+            await c.execute("select ts from issue3")
+            self.assertTrue(isinstance((await c.fetchone())[0], datetime.datetime))
         finally:
-            c.execute("drop table issue3")
+            await c.execute("drop table issue3")
 
     def test_issue_4(self):
         """ can't retrieve TIMESTAMP fields """
@@ -46,20 +46,20 @@ class TestOldIssues(base.TrioMySQLTestCase):
         c = conn.cursor()
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore")
-            c.execute("drop table if exists issue4")
-        c.execute("create table issue4 (ts timestamp)")
+            await c.execute("drop table if exists issue4")
+        await c.execute("create table issue4 (ts timestamp)")
         try:
-            c.execute("insert into issue4 (ts) values (now())")
-            c.execute("select ts from issue4")
-            self.assertTrue(isinstance(c.fetchone()[0], datetime.datetime))
+            await c.execute("insert into issue4 (ts) values (now())")
+            await c.execute("select ts from issue4")
+            self.assertTrue(isinstance((await c.fetchone())[0], datetime.datetime))
         finally:
-            c.execute("drop table issue4")
+            await c.execute("drop table issue4")
 
     def test_issue_5(self):
         """ query on information_schema.tables fails """
         con = self.connections[0]
         cur = con.cursor()
-        cur.execute("select * from information_schema.tables")
+        await cur.execute("select * from information_schema.tables")
 
     def test_issue_6(self):
         """ exception: TypeError: ord() expected a character, but string of length 0 found """
@@ -68,7 +68,7 @@ class TestOldIssues(base.TrioMySQLTestCase):
         kwargs['db'] = "mysql"
         conn = trio_mysql.connect(**kwargs)
         c = conn.cursor()
-        c.execute("select * from user")
+        await c.execute("select * from user")
         conn.close()
 
     def test_issue_8(self):
@@ -77,17 +77,17 @@ class TestOldIssues(base.TrioMySQLTestCase):
         c = conn.cursor()
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore")
-            c.execute("drop table if exists test")
-        c.execute("""CREATE TABLE `test` (`station` int(10) NOT NULL DEFAULT '0', `dh`
+            await c.execute("drop table if exists test")
+        await c.execute("""CREATE TABLE `test` (`station` int(10) NOT NULL DEFAULT '0', `dh`
 datetime NOT NULL DEFAULT '2015-01-01 00:00:00', `echeance` int(1) NOT NULL
 DEFAULT '0', `me` double DEFAULT NULL, `mo` double DEFAULT NULL, PRIMARY
 KEY (`station`,`dh`,`echeance`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;""")
         try:
-            self.assertEqual(0, c.execute("SELECT * FROM test"))
+            self.assertEqual(0, await c.execute("SELECT * FROM test"))
             c.execute("ALTER TABLE `test` ADD INDEX `idx_station` (`station`)")
-            self.assertEqual(0, c.execute("SELECT * FROM test"))
+            self.assertEqual(0, await c.execute("SELECT * FROM test"))
         finally:
-            c.execute("drop table test")
+            await c.execute("drop table test")
 
     def test_issue_9(self):
         """ sets DeprecationWarning in Python 2.6 """
@@ -102,18 +102,18 @@ KEY (`station`,`dh`,`echeance`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;""")
         cur = conn.cursor()
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore")
-            cur.execute("drop table if exists issue13")
+            await cur.execute("drop table if exists issue13")
         try:
-            cur.execute("create table issue13 (t text)")
+            await cur.execute("create table issue13 (t text)")
             # ticket says 18k
             size = 18*1024
-            cur.execute("insert into issue13 (t) values (%s)", ("x" * size,))
-            cur.execute("select t from issue13")
+            await cur.execute("insert into issue13 (t) values (%s)", ("x" * size,))
+            await cur.execute("select t from issue13")
             # use assertTrue so that obscenely huge error messages don't print
-            r = cur.fetchone()[0]
+            r = (await cur.fetchone())[0]
             self.assertTrue("x" * size == r)
         finally:
-            cur.execute("drop table issue13")
+            await cur.execute("drop table issue13")
 
     def test_issue_15(self):
         """ query should be expanded before perform character encoding """
@@ -121,14 +121,14 @@ KEY (`station`,`dh`,`echeance`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;""")
         c = conn.cursor()
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore")
-            c.execute("drop table if exists issue15")
-        c.execute("create table issue15 (t varchar(32))")
+            await c.execute("drop table if exists issue15")
+        await c.execute("create table issue15 (t varchar(32))")
         try:
-            c.execute("insert into issue15 (t) values (%s)", (u'\xe4\xf6\xfc',))
-            c.execute("select t from issue15")
-            self.assertEqual(u'\xe4\xf6\xfc', c.fetchone()[0])
+            await c.execute("insert into issue15 (t) values (%s)", (u'\xe4\xf6\xfc',))
+            await c.execute("select t from issue15")
+            self.assertEqual(u'\xe4\xf6\xfc', (await c.fetchone())[0])
         finally:
-            c.execute("drop table issue15")
+            await c.execute("drop table issue15")
 
     def test_issue_16(self):
         """ Patch for string and tuple escaping """
@@ -136,14 +136,14 @@ KEY (`station`,`dh`,`echeance`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;""")
         c = conn.cursor()
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore")
-            c.execute("drop table if exists issue16")
-        c.execute("create table issue16 (name varchar(32) primary key, email varchar(32))")
+            await c.execute("drop table if exists issue16")
+        await c.execute("create table issue16 (name varchar(32) primary key, email varchar(32))")
         try:
-            c.execute("insert into issue16 (name, email) values ('pete', 'floydophone')")
-            c.execute("select email from issue16 where name=%s", ("pete",))
-            self.assertEqual("floydophone", c.fetchone()[0])
+            await c.execute("insert into issue16 (name, email) values ('pete', 'floydophone')")
+            await c.execute("select email from issue16 where name=%s", ("pete",))
+            self.assertEqual("floydophone", (await c.fetchone())[0])
         finally:
-            c.execute("drop table issue16")
+            await c.execute("drop table issue16")
 
     @pytest.mark.skip("test_issue_17() requires a custom, legacy MySQL configuration and will not be run.")
     def test_issue_17(self):
@@ -157,18 +157,18 @@ KEY (`station`,`dh`,`echeance`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;""")
         try:
             with warnings.catch_warnings():
                 warnings.filterwarnings("ignore")
-                c.execute("drop table if exists issue17")
-            c.execute("create table issue17 (x varchar(32) primary key)")
-            c.execute("insert into issue17 (x) values ('hello, world!')")
-            c.execute("grant all privileges on %s.issue17 to 'issue17user'@'%%' identified by '1234'" % db)
-            conn.commit()
+                await c.execute("drop table if exists issue17")
+            await c.execute("create table issue17 (x varchar(32) primary key)")
+            await c.execute("insert into issue17 (x) values ('hello, world!')")
+            await c.execute("grant all privileges on %s.issue17 to 'issue17user'@'%%' identified by '1234'" % db)
+            await conn.commit()
 
             conn2 = trio_mysql.connect(host=host, user="issue17user", passwd="1234", db=db)
             c2 = conn2.cursor()
-            c2.execute("select x from issue17")
-            self.assertEqual("hello, world!", c2.fetchone()[0])
+            await c2.execute("select x from issue17")
+            self.assertEqual("hello, world!", (await c2.fetchone())[0])
         finally:
-            c.execute("drop table issue17")
+            await c.execute("drop table issue17")
 
 class TestNewIssues(base.TrioMySQLTestCase):
     def test_issue_34(self):
@@ -185,9 +185,9 @@ class TestNewIssues(base.TrioMySQLTestCase):
         self.safe_create_table(conn, u'hei\xdfe',
                                u'create table hei\xdfe (name varchar(32))')
         c = conn.cursor()
-        c.execute(u"insert into hei\xdfe (name) values ('Pi\xdfata')")
-        c.execute(u"select name from hei\xdfe")
-        self.assertEqual(u"Pi\xdfata", c.fetchone()[0])
+        await c.execute(u"insert into hei\xdfe (name) values ('Pi\xdfata')")
+        await c.execute(u"select name from hei\xdfe")
+        self.assertEqual(u"Pi\xdfata", (await c.fetchone())[0])
 
     @pytest.mark.skip("This test requires manual intervention")
     def test_issue_35(self):
@@ -195,7 +195,7 @@ class TestNewIssues(base.TrioMySQLTestCase):
         c = conn.cursor()
         print("sudo killall -9 mysqld within the next 10 seconds")
         try:
-            c.execute("select sleep(10)")
+            await c.execute("select sleep(10)")
             self.fail()
         except trio_mysql.OperationalError as e:
             self.assertEqual(2013, e.args[0])
@@ -204,9 +204,9 @@ class TestNewIssues(base.TrioMySQLTestCase):
         # connection 0 is super user, connection 1 isn't
         conn = self.connections[1]
         c = conn.cursor()
-        c.execute("show processlist")
+        await c.execute("show processlist")
         kill_id = None
-        for row in c.fetchall():
+        for row in await c.fetchall():
             id = row[0]
             info = row[7]
             if info == "show processlist":
@@ -214,10 +214,10 @@ class TestNewIssues(base.TrioMySQLTestCase):
                 break
         self.assertEqual(kill_id, conn.thread_id())
         # now nuke the connection
-        self.connections[0].kill(kill_id)
+        await self.connections[0].kill(kill_id)
         # make sure this connection has broken
         try:
-            c.execute("show tables")
+            await c.execute("show tables")
             self.fail()
         except Exception:
             pass
@@ -230,8 +230,8 @@ class TestNewIssues(base.TrioMySQLTestCase):
             time.sleep(0.1)
 
             c = self.connections[0].cursor()
-            c.execute("show processlist")
-            ids = [row[0] for row in c.fetchall()]
+            await c.execute("show processlist")
+            ids = [row[0] for row in await c.fetchall()]
             self.assertFalse(kill_id in ids)
         finally:
             del self.connections[1]
@@ -239,10 +239,10 @@ class TestNewIssues(base.TrioMySQLTestCase):
     def test_issue_37(self):
         conn = self.connections[0]
         c = conn.cursor()
-        self.assertEqual(1, c.execute("SELECT @foo"))
-        self.assertEqual((None,), c.fetchone())
-        self.assertEqual(0, c.execute("SET @foo = 'bar'"))
-        c.execute("set @foo = 'bar'")
+        self.assertEqual(1, await c.execute("SELECT @foo"))
+        self.assertEqual((None,), await c.fetchone())
+        self.assertEqual(0, await c.execute("SET @foo = 'bar'"))
+        await c.execute("set @foo = 'bar'")
 
     def test_issue_38(self):
         conn = self.connections[0]
@@ -252,28 +252,28 @@ class TestNewIssues(base.TrioMySQLTestCase):
         try:
             with warnings.catch_warnings():
                 warnings.filterwarnings("ignore")
-                c.execute("drop table if exists issue38")
-            c.execute("create table issue38 (id integer, data mediumblob)")
-            c.execute("insert into issue38 values (1, %s)", (datum,))
+                await c.execute("drop table if exists issue38")
+            await c.execute("create table issue38 (id integer, data mediumblob)")
+            await c.execute("insert into issue38 values (1, %s)", (datum,))
         finally:
-            c.execute("drop table issue38")
+            await c.execute("drop table issue38")
 
     def disabled_test_issue_54(self):
         conn = self.connections[0]
         c = conn.cursor()
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore")
-            c.execute("drop table if exists issue54")
+            await c.execute("drop table if exists issue54")
         big_sql = "select * from issue54 where "
         big_sql += " and ".join("%d=%d" % (i,i) for i in range(0, 100000))
 
         try:
-            c.execute("create table issue54 (id integer primary key)")
-            c.execute("insert into issue54 (id) values (7)")
-            c.execute(big_sql)
-            self.assertEqual(7, c.fetchone()[0])
+            await c.execute("create table issue54 (id integer primary key)")
+            await c.execute("insert into issue54 (id) values (7)")
+            await c.execute(big_sql)
+            self.assertEqual(7, (await c.fetchone())[0])
         finally:
-            c.execute("drop table issue54")
+            await c.execute("drop table issue54")
 
 class TestGitHubIssues(base.TrioMySQLTestCase):
     def test_issue_66(self):
@@ -284,13 +284,13 @@ class TestGitHubIssues(base.TrioMySQLTestCase):
         try:
             with warnings.catch_warnings():
                 warnings.filterwarnings("ignore")
-                c.execute("drop table if exists issue66")
-            c.execute("create table issue66 (id integer primary key auto_increment, x integer)")
-            c.execute("insert into issue66 (x) values (1)")
-            c.execute("insert into issue66 (x) values (1)")
+                await c.execute("drop table if exists issue66")
+            await c.execute("create table issue66 (id integer primary key auto_increment, x integer)")
+            await c.execute("insert into issue66 (x) values (1)")
+            await c.execute("insert into issue66 (x) values (1)")
             self.assertEqual(2, conn.insert_id())
         finally:
-            c.execute("drop table issue66")
+            await c.execute("drop table issue66")
 
     def test_issue_79(self):
         """ Duplicate field overwrites the previous one in the result of DictCursor """
@@ -299,25 +299,25 @@ class TestGitHubIssues(base.TrioMySQLTestCase):
 
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore")
-            c.execute("drop table if exists a")
-            c.execute("drop table if exists b")
-        c.execute("""CREATE TABLE a (id int, value int)""")
-        c.execute("""CREATE TABLE b (id int, value int)""")
+            await c.execute("drop table if exists a")
+            await c.execute("drop table if exists b")
+        await c.execute("""CREATE TABLE a (id int, value int)""")
+        await c.execute("""CREATE TABLE b (id int, value int)""")
 
         a=(1,11)
         b=(1,22)
         try:
-            c.execute("insert into a values (%s, %s)", a)
-            c.execute("insert into b values (%s, %s)", b)
+            await c.execute("insert into a values (%s, %s)", a)
+            await c.execute("insert into b values (%s, %s)", b)
 
-            c.execute("SELECT * FROM a inner join b on a.id = b.id")
-            r = c.fetchall()[0]
+            await c.execute("SELECT * FROM a inner join b on a.id = b.id")
+            r = await c.fetchall()[0]
             self.assertEqual(r['id'], 1)
             self.assertEqual(r['value'], 11)
             self.assertEqual(r['b.value'], 22)
         finally:
-            c.execute("drop table a")
-            c.execute("drop table b")
+            await c.execute("drop table a")
+            await c.execute("drop table b")
 
     def test_issue_95(self):
         """ Leftover trailing OK packet for "CALL my_sp" queries """
@@ -325,43 +325,43 @@ class TestGitHubIssues(base.TrioMySQLTestCase):
         cur = conn.cursor()
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore")
-            cur.execute("DROP PROCEDURE IF EXISTS `foo`")
-        cur.execute("""CREATE PROCEDURE `foo` ()
+            await cur.execute("DROP PROCEDURE IF EXISTS `foo`")
+        await cur.execute("""CREATE PROCEDURE `foo` ()
         BEGIN
             SELECT 1;
         END""")
         try:
-            cur.execute("""CALL foo()""")
-            cur.execute("""SELECT 1""")
-            self.assertEqual(cur.fetchone()[0], 1)
+            await cur.execute("""CALL foo()""")
+            await cur.execute("""SELECT 1""")
+            self.assertEqual((await cur.fetchone())[0], 1)
         finally:
             with warnings.catch_warnings():
                 warnings.filterwarnings("ignore")
-                cur.execute("DROP PROCEDURE IF EXISTS `foo`")
+                await cur.execute("DROP PROCEDURE IF EXISTS `foo`")
 
     def test_issue_114(self):
         """ autocommit is not set after reconnecting with ping() """
         conn = trio_mysql.connect(charset="utf8", **self.databases[0])
-        conn.autocommit(False)
+        await conn.autocommit(False)
         c = conn.cursor()
-        c.execute("""select @@autocommit;""")
-        self.assertFalse(c.fetchone()[0])
+        await c.execute("""select @@autocommit;""")
+        self.assertFalse((await c.fetchone())[0])
         conn.close()
-        conn.ping()
-        c.execute("""select @@autocommit;""")
-        self.assertFalse(c.fetchone()[0])
+        await conn.ping()
+        await c.execute("""select @@autocommit;""")
+        self.assertFalse((await c.fetchone())[0])
         conn.close()
 
         # Ensure autocommit() is still working
         conn = trio_mysql.connect(charset="utf8", **self.databases[0])
         c = conn.cursor()
-        c.execute("""select @@autocommit;""")
-        self.assertFalse(c.fetchone()[0])
+        await c.execute("""select @@autocommit;""")
+        self.assertFalse((await c.fetchone())[0])
         conn.close()
-        conn.ping()
-        conn.autocommit(True)
-        c.execute("""select @@autocommit;""")
-        self.assertTrue(c.fetchone()[0])
+        await conn.ping()
+        await conn.autocommit(True)
+        await c.execute("""select @@autocommit;""")
+        self.assertTrue((await c.fetchone())[0])
         conn.close()
 
     def test_issue_175(self):
@@ -372,13 +372,13 @@ class TestGitHubIssues(base.TrioMySQLTestCase):
             columns = ', '.join('c{0} integer'.format(i) for i in range(length))
             sql = 'create table test_field_count ({0})'.format(columns)
             try:
-                cur.execute(sql)
-                cur.execute('select * from test_field_count')
+                await cur.execute(sql)
+                await cur.execute('select * from test_field_count')
                 assert len(cur.description) == length
             finally:
                 with warnings.catch_warnings():
                     warnings.filterwarnings("ignore")
-                    cur.execute('drop table if exists test_field_count')
+                    await cur.execute('drop table if exists test_field_count')
 
     def test_issue_321(self):
         """ Test iterable as query argument. """
@@ -398,14 +398,14 @@ class TestGitHubIssues(base.TrioMySQLTestCase):
             {"value_1": [[u"c"]], "value_2": u"\u0430"}
         ]
         cur = conn.cursor()
-        self.assertEqual(cur.execute(sql_insert, data[0]), 1)
-        self.assertEqual(cur.execute(sql_insert, data[1]), 1)
-        self.assertEqual(cur.execute(sql_dict_insert, data[2]), 1)
+        self.assertEqual(await cur.execute(sql_insert, data[0]), 1)
+        self.assertEqual(await cur.execute(sql_insert, data[1]), 1)
+        self.assertEqual(await cur.execute(sql_dict_insert, data[2]), 1)
         self.assertEqual(
-            cur.execute(sql_select, [(u"a", u"b", u"c"), u"\u0430"]), 3)
-        self.assertEqual(cur.fetchone(), (u"a", u"\u0430"))
-        self.assertEqual(cur.fetchone(), (u"b", u"\u0430"))
-        self.assertEqual(cur.fetchone(), (u"c", u"\u0430"))
+            await cur.execute(sql_select, [(u"a", u"b", u"c"), u"\u0430"]), 3)
+        self.assertEqual(await cur.fetchone(), (u"a", u"\u0430"))
+        self.assertEqual(await cur.fetchone(), (u"b", u"\u0430"))
+        self.assertEqual(await cur.fetchone(), (u"c", u"\u0430"))
 
     def test_issue_364(self):
         """ Test mixed unicode/binary arguments in executemany. """
@@ -421,21 +421,21 @@ class TestGitHubIssues(base.TrioMySQLTestCase):
 
         # test single insert and select
         cur = conn.cursor()
-        cur.execute(sql, args=values)
-        cur.execute("select * from issue364")
-        self.assertEqual(cur.fetchone(), tuple(values))
+        await cur.execute(sql, args=values)
+        await cur.execute("select * from issue364")
+        self.assertEqual(await cur.fetchone(), tuple(values))
 
         # test single insert unicode query
-        cur.execute(usql, args=values)
+        await cur.execute(usql, args=values)
 
         # test multi insert and select
-        cur.executemany(sql, args=(values, values, values))
-        cur.execute("select * from issue364")
-        for row in cur.fetchall():
+        await cur.executemany(sql, args=(values, values, values))
+        await cur.execute("select * from issue364")
+        for row in await cur.fetchall():
             self.assertEqual(row, tuple(values))
 
         # test multi insert with unicode query
-        cur.executemany(usql, args=(values, values, values))
+        await cur.executemany(usql, args=(values, values, values))
 
     def test_issue_363(self):
         """ Test binary / geometry types. """
@@ -453,28 +453,28 @@ class TestGitHubIssues(base.TrioMySQLTestCase):
         # From MySQL 5.7, ST_GeomFromText is added and GeomFromText is deprecated.
         if self.mysql_server_is(conn, (5, 7, 0)):
             with self.assertWarns(trio_mysql.err.Warning) as cm:
-                cur.execute(query)
+                await cur.execute(query)
         else:
-            cur.execute(query)
+            await cur.execute(query)
 
         # select WKT
         query = "SELECT AsText(geom) FROM issue363"
         if self.mysql_server_is(conn, (5, 7, 0)):
             with self.assertWarns(trio_mysql.err.Warning) as cm:
-                cur.execute(query)
+                await cur.execute(query)
         else:
-            cur.execute(query)
-        row = cur.fetchone()
+            await cur.execute(query)
+        row = await cur.fetchone()
         self.assertEqual(row, ("LINESTRING(1.1 1.1,2.2 2.2)", ))
 
         # select WKB
         query = "SELECT AsBinary(geom) FROM issue363"
         if self.mysql_server_is(conn, (5, 7, 0)):
             with self.assertWarns(trio_mysql.err.Warning) as cm:
-                cur.execute(query)
+                await cur.execute(query)
         else:
-            cur.execute(query)
-        row = cur.fetchone()
+            await cur.execute(query)
+        row = await cur.fetchone()
         self.assertEqual(row,
                          (b"\x01\x02\x00\x00\x00\x02\x00\x00\x00"
                           b"\x9a\x99\x99\x99\x99\x99\xf1?"
@@ -483,8 +483,8 @@ class TestGitHubIssues(base.TrioMySQLTestCase):
                           b"\x9a\x99\x99\x99\x99\x99\x01@", ))
 
         # select internal binary
-        cur.execute("SELECT geom FROM issue363")
-        row = cur.fetchone()
+        await cur.execute("SELECT geom FROM issue363")
+        row = await cur.fetchone()
         # don't assert the exact internal binary value, as it could
         # vary across implementations
         self.assertTrue(isinstance(row[0], bytes))
@@ -502,8 +502,8 @@ class TestGitHubIssues(base.TrioMySQLTestCase):
             for cursor_class in (cursors.Cursor, cursors.SSCursor):
                 c = conn.cursor(cursor_class)
                 try:
-                    c.execute("SELECT CAST('124b' AS SIGNED)")
-                    c.fetchall()
+                    await c.execute("SELECT CAST('124b' AS SIGNED)")
+                    await c.fetchall()
                 except trio_mysql.Warning as e:
                     # Warnings should have errorcode and string message, just like exceptions
                     self.assertEqual(len(e.args), 2)

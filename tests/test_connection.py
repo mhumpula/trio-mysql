@@ -19,25 +19,25 @@ class TempUser:
             if authdata is not None:
                 create += " AS '%s'" % authdata
         try:
-            c.execute(create)
+            await c.execute(create)
             self._created = True
         except trio_mysql.err.InternalError:
             # already exists - TODO need to check the same plugin applies
             self._created = False
         try:
-            c.execute("GRANT SELECT ON %s.* TO %s" % (db, user))
+            await c.execute("GRANT SELECT ON %s.* TO %s" % (db, user))
             self._grant = True
         except trio_mysql.err.InternalError:
             self._grant = False
 
-    def __enter__(self):
+    async def __aenter__(self):
         return self
 
-    def __exit__(self, exc_type, exc_value, traceback):
+    async def __aexit__(self, exc_type, exc_value, traceback):
         if self._grant:
-            self._c.execute("REVOKE SELECT ON %s.* FROM %s" % (self._db, self._user))
+            await self._c.execute("REVOKE SELECT ON %s.* FROM %s" % (self._db, self._user))
         if self._created:
-            self._c.execute("DROP USER %s" % self._user)
+            await self._c.execute("DROP USER %s" % self._user)
 
 
 class TestAuthentication(base.TrioMySQLTestCase):
@@ -62,7 +62,7 @@ class TestAuthentication(base.TrioMySQLTestCase):
 
     cur = trio_mysql.connect(**db).cursor()
     del db['user']
-    cur.execute("SHOW PLUGINS")
+    await cur.execute("SHOW PLUGINS")
     for r in cur:
         if (r[1], r[2]) !=  (u'ACTIVE', u'AUTHENTICATION'):
             continue
@@ -104,13 +104,13 @@ class TestAuthentication(base.TrioMySQLTestCase):
         # needs plugin. lets install it.
         cur = self.connections[0].cursor()
         try:
-            cur.execute("install plugin auth_socket soname 'auth_socket.so'")
+            await cur.execute("install plugin auth_socket soname 'auth_socket.so'")
             TestAuthentication.socket_found = True
             self.socket_plugin_name = 'auth_socket'
             self.realtestSocketAuth()
         except trio_mysql.err.InternalError:
             try:
-                cur.execute("install soname 'auth_socket'")
+                await cur.execute("install soname 'auth_socket'")
                 TestAuthentication.socket_found = True
                 self.socket_plugin_name = 'unix_socket'
                 self.realtestSocketAuth()
@@ -119,7 +119,7 @@ class TestAuthentication(base.TrioMySQLTestCase):
                 raise base.SkipTest('we couldn\'t install the socket plugin')
         finally:
             if TestAuthentication.socket_found:
-                cur.execute("uninstall plugin %s" % self.socket_plugin_name)
+                await cur.execute("uninstall plugin %s" % self.socket_plugin_name)
 
     @pytest.mark.skipif(not socket_auth, "connection to unix_socket required")
     @pytest.mark.skipif(not socket_found, "no socket plugin")
@@ -157,9 +157,9 @@ class TestAuthentication(base.TrioMySQLTestCase):
                 prompt = pkt.read_all()
 
                 if prompt == b'Password, please:':
-                    self.con.write_packet(b'stillnotverysecret\0')
+                    await self.con.write_packet(b'stillnotverysecret\0')
                 else:
-                    self.con.write_packet(b'no idea what to do with this prompt\0')
+                    await self.con.write_packet(b'no idea what to do with this prompt\0')
                 pkt = self.con._read_packet()
                 pkt.check_error()
                 if pkt.is_ok_packet() or last:
@@ -178,14 +178,14 @@ class TestAuthentication(base.TrioMySQLTestCase):
         # needs plugin. lets install it.
         cur = self.connections[0].cursor()
         try:
-            cur.execute("install plugin two_questions soname 'dialog_examples.so'")
+            await cur.execute("install plugin two_questions soname 'dialog_examples.so'")
             TestAuthentication.two_questions_found = True
             self.realTestDialogAuthTwoQuestions()
         except trio_mysql.err.InternalError:
             raise base.SkipTest('we couldn\'t install the two_questions plugin')
         finally:
             if TestAuthentication.two_questions_found:
-                cur.execute("uninstall plugin two_questions")
+                await cur.execute("uninstall plugin two_questions")
 
     @pytest.mark.skipif(not socket_auth, "connection to unix_socket required")
     @pytest.mark.skipif(not two_questions_found, "no two questions auth plugin")
@@ -209,14 +209,14 @@ class TestAuthentication(base.TrioMySQLTestCase):
         # needs plugin. lets install it.
         cur = self.connections[0].cursor()
         try:
-            cur.execute("install plugin three_attempts soname 'dialog_examples.so'")
+            await cur.execute("install plugin three_attempts soname 'dialog_examples.so'")
             TestAuthentication.three_attempts_found = True
             self.realTestDialogAuthThreeAttempts()
         except trio_mysql.err.InternalError:
             raise base.SkipTest('we couldn\'t install the three_attempts plugin')
         finally:
             if TestAuthentication.three_attempts_found:
-                cur.execute("uninstall plugin three_attempts")
+                await cur.execute("uninstall plugin three_attempts")
 
     @pytest.mark.skipif(not socket_auth, "connection to unix_socket required")
     @pytest.mark.skipif(not three_attempts_found, "no three attempts plugin")
@@ -253,14 +253,14 @@ class TestAuthentication(base.TrioMySQLTestCase):
         # needs plugin. lets install it.
         cur = self.connections[0].cursor()
         try:
-            cur.execute("install plugin pam soname 'auth_pam.so'")
+            await cur.execute("install plugin pam soname 'auth_pam.so'")
             TestAuthentication.pam_found = True
             self.realTestPamAuth()
         except trio_mysql.err.InternalError:
             raise base.SkipTest('we couldn\'t install the auth_pam plugin')
         finally:
             if TestAuthentication.pam_found:
-                cur.execute("uninstall plugin pam")
+                await cur.execute("uninstall plugin pam")
 
 
     @pytest.mark.skipif(not socket_auth, "connection to unix_socket required")
@@ -276,9 +276,9 @@ class TestAuthentication(base.TrioMySQLTestCase):
         db['password'] = os.environ.get('PASSWORD')
         cur = self.connections[0].cursor()
         try:
-            cur.execute('show grants for ' + TestAuthentication.osuser + '@localhost')
-            grants = cur.fetchone()[0]
-            cur.execute('drop user ' + TestAuthentication.osuser + '@localhost')
+            await cur.execute('show grants for ' + TestAuthentication.osuser + '@localhost')
+            grants = (await cur.fetchone())[0]
+            await cur.execute('drop user ' + TestAuthentication.osuser + '@localhost')
         except trio_mysql.OperationalError as e:
             # assuming the user doesn't exist which is ok too
             self.assertEqual(1045, e.args[0])
@@ -301,7 +301,7 @@ class TestAuthentication(base.TrioMySQLTestCase):
                                     **self.db)
         if grants:
             # recreate the user
-            cur.execute(grants)
+            await cur.execute(grants)
 
     # select old_password("crummy p\tassword");
     #| old_password("crummy p\tassword") |
@@ -322,31 +322,31 @@ class TestAuthentication(base.TrioMySQLTestCase):
             # deprecated in 5.6
             if sys.version_info[0:2] >= (3,2) and self.mysql_server_is(self.connections[0], (5, 6, 0)):
                 with self.assertWarns(trio_mysql.err.Warning) as cm:
-                    c.execute("SELECT OLD_PASSWORD('%s')" % db['password'])
+                    await c.execute("SELECT OLD_PASSWORD('%s')" % db['password'])
             else:
-                c.execute("SELECT OLD_PASSWORD('%s')" % db['password'])
-            v = c.fetchone()[0]
+                await c.execute("SELECT OLD_PASSWORD('%s')" % db['password'])
+            v = (await c.fetchone())[0]
             self.assertEqual(v, '2a01785203b08770')
             # only works in MariaDB and MySQL-5.6 - can't separate out by version
             #if self.mysql_server_is(self.connections[0], (5, 5, 0)):
             #    with TempUser(c, 'old_pass_user@localhost',
             #                  self.databases[0]['db'], 'mysql_old_password', '2a01785203b08770') as u:
             #        cur = trio_mysql.connect(user='old_pass_user', **db).cursor()
-            #        cur.execute("SELECT VERSION()")
-            c.execute("SELECT @@secure_auth")
-            secure_auth_setting = c.fetchone()[0]
-            c.execute('set old_passwords=1')
+            #        await cur.execute("SELECT VERSION()")
+            await c.execute("SELECT @@secure_auth")
+            secure_auth_setting = (await c.fetchone())[0]
+            await c.execute('set old_passwords=1')
             # trio_mysql.err.Warning: 'pre-4.1 password hash' is deprecated and will be removed in a future release. Please use post-4.1 password hash instead
             if sys.version_info[0:2] >= (3,2) and self.mysql_server_is(self.connections[0], (5, 6, 0)):
                 with self.assertWarns(trio_mysql.err.Warning) as cm:
-                    c.execute('set global secure_auth=0')
+                    await c.execute('set global secure_auth=0')
             else:
-                c.execute('set global secure_auth=0')
+                await c.execute('set global secure_auth=0')
             with TempUser(c, 'old_pass_user@localhost',
                           self.databases[0]['db'], password=db['password']) as u:
                 cur = trio_mysql.connect(user='old_pass_user', **db).cursor()
-                cur.execute("SELECT VERSION()")
-            c.execute('set global secure_auth=%r' % secure_auth_setting)
+                await cur.execute("SELECT VERSION()")
+            await c.execute('set global secure_auth=%r' % secure_auth_setting)
 
     @pytest.mark.skipif(not socket_auth, "connection to unix_socket required")
     @pytest.mark.skipif(not sha256_password_found, "no sha256 password authentication plugin found")
@@ -355,10 +355,10 @@ class TestAuthentication(base.TrioMySQLTestCase):
         with TempUser(c, 'trio_mysql_sha256@localhost',
                       self.databases[0]['db'], 'sha256_password') as u:
             if self.mysql_server_is(self.connections[0], (5, 7, 0)):
-                c.execute("SET PASSWORD FOR 'trio_mysql_sha256'@'localhost' ='Sh@256Pa33'")
+                await c.execute("SET PASSWORD FOR 'trio_mysql_sha256'@'localhost' ='Sh@256Pa33'")
             else:
-                c.execute('SET old_passwords = 2')
-                c.execute("SET PASSWORD FOR 'trio_mysql_sha256'@'localhost' = PASSWORD('Sh@256Pa33')")
+                await c.execute('SET old_passwords = 2')
+                await c.execute("SET PASSWORD FOR 'trio_mysql_sha256'@'localhost' = PASSWORD('Sh@256Pa33')")
             db = self.db.copy()
             db['password'] = "Sh@256Pa33"
             # not implemented yet so thows error
@@ -376,26 +376,26 @@ class TestConnection(base.TrioMySQLTestCase):
     def test_largedata(self):
         """Large query and response (>=16MB)"""
         cur = self.connections[0].cursor()
-        cur.execute("SELECT @@max_allowed_packet")
-        if cur.fetchone()[0] < 16*1024*1024 + 10:
+        await cur.execute("SELECT @@max_allowed_packet")
+        if (await cur.fetchone())[0] < 16*1024*1024 + 10:
             print("Set max_allowed_packet to bigger than 17MB")
             return
         t = 'a' * (16*1024*1024)
-        cur.execute("SELECT '" + t + "'")
-        assert cur.fetchone()[0] == t
+        await cur.execute("SELECT '" + t + "'")
+        assert (await cur.fetchone())[0] == t
 
     def test_autocommit(self):
         con = self.connections[0]
         self.assertFalse(con.get_autocommit())
 
         cur = con.cursor()
-        cur.execute("SET AUTOCOMMIT=1")
+        await cur.execute("SET AUTOCOMMIT=1")
         self.assertTrue(con.get_autocommit())
 
-        con.autocommit(False)
+        await con.autocommit(False)
         self.assertFalse(con.get_autocommit())
-        cur.execute("SELECT @@AUTOCOMMIT")
-        self.assertEqual(cur.fetchone()[0], 0)
+        await cur.execute("SELECT @@AUTOCOMMIT")
+        assert (await cur.fetchone())[0] == 0
 
     def test_select_db(self):
         con = self.connections[0]
@@ -403,12 +403,12 @@ class TestConnection(base.TrioMySQLTestCase):
         other_db = self.databases[1]['db']
 
         cur = con.cursor()
-        cur.execute('SELECT database()')
-        self.assertEqual(cur.fetchone()[0], current_db)
+        await cur.execute('SELECT database()')
+        assert (await cur.fetchone())[0] == current_db
 
-        con.select_db(other_db)
-        cur.execute('SELECT database()')
-        self.assertEqual(cur.fetchone()[0], other_db)
+        await con.select_db(other_db)
+        await cur.execute('SELECT database()')
+        assert (await cur.fetchone())[0] == other_db
 
     def test_connection_gone_away(self):
         """
@@ -417,10 +417,10 @@ class TestConnection(base.TrioMySQLTestCase):
         """
         con = self.connections[0]
         cur = con.cursor()
-        cur.execute("SET wait_timeout=1")
+        await cur.execute("SET wait_timeout=1")
         time.sleep(2)
         with self.assertRaises(trio_mysql.OperationalError) as cm:
-            cur.execute("SELECT 1+1")
+            await cur.execute("SELECT 1+1")
         # error occures while reading, not writing because of socket buffer.
         #self.assertEqual(cm.exception.args[0], 2006)
         self.assertIn(cm.exception.args[0], (2006, 2013))
@@ -431,11 +431,11 @@ class TestConnection(base.TrioMySQLTestCase):
             **self.databases[0]
         )
         c = conn.cursor()
-        c.execute('select "foobar";')
-        self.assertEqual(('foobar',), c.fetchone())
+        await c.execute('select "foobar";')
+        self.assertEqual(('foobar',), await c.fetchone())
         conn.close()
         with self.assertRaises(trio_mysql.err.Error):
-            conn.ping(reconnect=False)
+            await conn.ping(reconnect=False)
 
     def test_read_default_group(self):
         conn = trio_mysql.connect(
@@ -448,24 +448,24 @@ class TestConnection(base.TrioMySQLTestCase):
         with self.assertRaises(ValueError):
             c = trio_mysql.connect(**self.databases[0])
             with c as cur:
-                cur.execute('create table test ( a int )')
-                c.begin()
-                cur.execute('insert into test values ((1))')
+                await cur.execute('create table test ( a int )')
+                await c.begin()
+                await cur.execute('insert into test values ((1))')
                 raise ValueError('pseudo abort')
-                c.commit()
+                await c.commit()
         c = trio_mysql.connect(**self.databases[0])
         with c as cur:
-            cur.execute('select count(*) from test')
-            self.assertEqual(0, cur.fetchone()[0])
-            cur.execute('insert into test values ((1))')
+            await cur.execute('select count(*) from test')
+            self.assertEqual(0, (await cur.fetchone())[0])
+            await cur.execute('insert into test values ((1))')
         with c as cur:
-            cur.execute('select count(*) from test')
-            self.assertEqual(1,cur.fetchone()[0])
-            cur.execute('drop table test')
+            await cur.execute('select count(*) from test')
+            self.assertEqual(1, (await cur.fetchone())[0])
+            await cur.execute('drop table test')
 
     def test_set_charset(self):
         c = trio_mysql.connect(**self.databases[0])
-        c.set_charset('utf8')
+        await c.set_charset('utf8')
         # TODO validate setting here
 
     def test_defer_connect(self):
@@ -514,7 +514,7 @@ class TestEscape(base.TrioMySQLTestCase):
 
         self.assertEqual(con.escape("foo'bar"), "'foo\\'bar'")
         # added NO_AUTO_CREATE_USER as not including it in 5.7 generates warnings
-        cur.execute("SET sql_mode='NO_BACKSLASH_ESCAPES,NO_AUTO_CREATE_USER'")
+        await cur.execute("SET sql_mode='NO_BACKSLASH_ESCAPES,NO_AUTO_CREATE_USER'")
         self.assertEqual(con.escape("foo'bar"), "'foo''bar'")
 
     def test_escape_builtin_encoders(self):
@@ -566,15 +566,15 @@ class TestEscape(base.TrioMySQLTestCase):
     def test_previous_cursor_not_closed(self):
         con = self.connections[0]
         cur1 = con.cursor()
-        cur1.execute("SELECT 1; SELECT 2")
+        await cur1.execute("SELECT 1; SELECT 2")
         cur2 = con.cursor()
-        cur2.execute("SELECT 3")
-        self.assertEqual(cur2.fetchone()[0], 3)
+        await cur2.execute("SELECT 3")
+        assert (await cur2.fetchone())[0] == 3
 
     def test_commit_during_multi_result(self):
         con = self.connections[0]
         cur = con.cursor()
-        cur.execute("SELECT 1; SELECT 2")
-        con.commit()
-        cur.execute("SELECT 3")
-        self.assertEqual(cur.fetchone()[0], 3)
+        await cur.execute("SELECT 1; SELECT 2")
+        await con.commit()
+        await cur.execute("SELECT 3")
+        assert (await cur.fetchone())[0] == 3

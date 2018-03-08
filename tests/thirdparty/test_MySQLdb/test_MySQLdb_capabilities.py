@@ -44,26 +44,26 @@ class test_MySQLdb(capabilities.DatabaseTest):
         c = self.cursor
         try:
             self.create_table(('pos INT', 'tree CHAR(20)'))
-            c.executemany("INSERT INTO %s (pos,tree) VALUES (%%s,%%s)" % self.table,
+            await c.executemany("INSERT INTO %s (pos,tree) VALUES (%%s,%%s)" % self.table,
                           list(enumerate('ash birch cedar larch pine'.split())))
-            db.commit()
+            await db.commit()
 
-            c.execute("""
+            await c.execute("""
             CREATE PROCEDURE test_sp(IN t VARCHAR(255))
             BEGIN
                 SELECT pos FROM %s WHERE tree = t;
             END
             """ % self.table)
-            db.commit()
+            await db.commit()
 
-            c.callproc('test_sp', ('larch',))
-            rows = c.fetchall()
+            await c.callproc('test_sp', ('larch',))
+            rows = await c.fetchall()
             self.assertEqual(len(rows), 1)
             self.assertEqual(rows[0][0], 3)
-            c.nextset()
+            await c.nextset()
         finally:
-            c.execute("DROP PROCEDURE IF EXISTS test_sp")
-            c.execute('drop table %s' % (self.table))
+            await c.execute("DROP PROCEDURE IF EXISTS test_sp")
+            await c.execute('drop table %s' % (self.table))
 
     def test_small_CHAR(self):
         # Character data
@@ -79,12 +79,12 @@ class test_MySQLdb(capabilities.DatabaseTest):
     def test_bug_2671682(self):
         from trio_mysql.constants import ER
         try:
-            self.cursor.execute("describe some_non_existent_table");
+            await self.cursor.execute("describe some_non_existent_table");
         except self.connection.ProgrammingError as msg:
             self.assertEqual(msg.args[0], ER.NO_SUCH_TABLE)
 
     def test_ping(self):
-        self.connection.ping()
+        await self.connection.ping()
 
     def test_literal_int(self):
         self.assertTrue("2" == self.connection.literal(2))
