@@ -4,7 +4,7 @@ import trio_mysql
 _mysql = trio_mysql
 from trio_mysql.constants import FIELD_TYPE
 from trio_mysql.tests import base
-from trio_mysql._compat import long_type
+from trio_mysql._compat import int
 
 
 class TestDBAPISet:
@@ -55,7 +55,7 @@ class TestCoreAPI:
 
     def test_thread_id(self):
         tid = self.conn.thread_id()
-        self.assertTrue(isinstance(tid, (int, long_type)),
+        self.assertTrue(isinstance(tid, (int, int)),
                         "thread_id didn't return an integral value.")
 
         self.assertRaises(TypeError, self.conn.thread_id, ('evil',),

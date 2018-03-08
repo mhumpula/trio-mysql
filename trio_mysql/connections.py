@@ -3,7 +3,7 @@
 # Error codes:
 # http://dev.mysql.com/doc/refman/5.5/en/error-messages-client.html
 from __future__ import print_function
-from ._compat import  range_type, text_type, str_type, JYTHON, IRONPYTHON
+from ._compat import  range, str, str, JYTHON, IRONPYTHON
 
 import errno
 from functools import partial
@@ -102,7 +102,7 @@ def dump_packet(data): # pragma: no cover
         print("-" * 66)
     except ValueError:
         pass
-    dump_data = [data[i:i+16] for i in range_type(0, min(len(data), 256), 16)]
+    dump_data = [data[i:i+16] for i in range(0, min(len(data), 256), 16)]
     for d in dump_data:
         print(' '.join(map(lambda x: "{:02X}".format(byte2int(x)), d)) +
               '   ' * (16 - len(d)) + ' ' * 2 +
@@ -129,7 +129,7 @@ def _scramble(password, message):
 def _my_crypt(message1, message2):
     length = len(message1)
     result = b''
-    for i in range_type(length):
+    for i in range(length):
         x = (struct.unpack('B', message1[i:i+1])[0] ^
              struct.unpack('B', message2[i:i+1])[0])
         result += struct.pack('B', x)
@@ -160,7 +160,7 @@ def _scramble_323(password, message):
     rand_st = RandStruct_323(hash_pass_n[0] ^ hash_message_n[0],
                              hash_pass_n[1] ^ hash_message_n[1])
     outbuf = io.BytesIO()
-    for _ in range_type(min(SCRAMBLE_LENGTH_323, len(message))):
+    for _ in range(min(SCRAMBLE_LENGTH_323, len(message))):
         outbuf.write(int2byte(int(rand_st.my_rnd() * 31) + 64))
     extra = int2byte(int(rand_st.my_rnd() * 31))
     out = outbuf.getvalue()
@@ -811,7 +811,7 @@ class Connection(object):
         
         Non-standard, for internal use; do not use this in your applications.
         """
-        if isinstance(obj, str_type):
+        if isinstance(obj, str):
             return "'" + self.escape_string(obj) + "'"
         if isinstance(obj, (bytes, bytearray)):
             ret = self._quote_bytes(obj)
@@ -866,7 +866,7 @@ class Connection(object):
     def query(self, sql, unbuffered=False):
         # if DEBUG:
         #     print("DEBUG: sending query:", sql)
-        if isinstance(sql, text_type) and not (JYTHON or IRONPYTHON):
+        if isinstance(sql, str) and not (JYTHON or IRONPYTHON):
             sql = sql.encode(self.encoding, 'surrogateescape')
         self._execute_command(COMMAND.COM_QUERY, sql)
         self._affected_rows = self._read_query_result(unbuffered=unbuffered)
@@ -1109,7 +1109,7 @@ class Connection(object):
                 self.next_result()
             self._result = None
 
-        if isinstance(sql, text_type):
+        if isinstance(sql, str):
             sql = sql.encode(self.encoding)
 
         packet_size = min(MAX_PACKET_LEN, len(sql) + 1)  # +1 is for command
@@ -1142,7 +1142,7 @@ class Connection(object):
             raise ValueError("Did not specify a username")
 
         charset_id = charset_by_name(self.charset).id
-        if isinstance(self.user, text_type):
+        if isinstance(self.user, str):
             self.user = self.user.encode(self.encoding)
 
         data_init = struct.pack('<iIB23s', self.client_flag, 1, charset_id, b'')
@@ -1167,13 +1167,13 @@ class Connection(object):
             data += authresp + b'\0'
 
         if self.db and self.server_capabilities & CLIENT.CONNECT_WITH_DB:
-            if isinstance(self.db, text_type):
+            if isinstance(self.db, str):
                 self.db = self.db.encode(self.encoding)
             data += self.db + b'\0'
 
         if self.server_capabilities & CLIENT.PLUGIN_AUTH:
             name = self._auth_plugin_name
-            if isinstance(name, text_type):
+            if isinstance(name, str):
                 name = name.encode('ascii')
             data += name + b'\0'
 
@@ -1516,7 +1516,7 @@ class MySQLResult(object):
         conn_encoding = self.connection.encoding
         description = []
 
-        for i in range_type(self.field_count):
+        for i in range(self.field_count):
             field = self.connection._read_packet(FieldDescriptorPacket)
             self.fields.append(field)
             description.append(field.description())

@@ -3,7 +3,7 @@ import sys
 import time
 import trio_mysql
 from tests import base
-from trio_mysql._compat import text_type
+from trio_mysql._compat import str
 
 
 class TempUser:
@@ -538,7 +538,7 @@ class TestEscape(base.TrioMySQLTestCase):
         class Custom(str):
             pass
 
-        mapping = {text_type: trio_mysql.escape_string}
+        mapping = {str: trio_mysql.escape_string}
         self.assertEqual(con.escape(Custom('foobar'), mapping), "'foobar'")
 
     def test_escape_no_default(self):

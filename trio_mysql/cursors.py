@@ -4,7 +4,7 @@ from functools import partial
 import re
 import warnings
 
-from ._compat import range_type, text_type
+from ._compat import range, str
 from . import err
 
 
@@ -105,7 +105,7 @@ class Cursor(object):
         return self._nextset(False)
 
     def _ensure_bytes(self, x, encoding=None):
-        if isinstance(x, text_type):
+        if isinstance(x, str):
             x = x.encode(encoding)
         elif isinstance(x, (tuple, list)):
             x = type(x)(self._ensure_bytes(v, encoding=encoding) for v in x)
@@ -190,20 +190,20 @@ class Cursor(object):
     def _do_execute_many(self, prefix, values, postfix, args, max_stmt_length, encoding):
         conn = self._get_db()
         escape = self._escape_args
-        if isinstance(prefix, text_type):
+        if isinstance(prefix, str):
             prefix = prefix.encode(encoding)
-        if isinstance(postfix, text_type):
+        if isinstance(postfix, str):
             postfix = postfix.encode(encoding)
         sql = bytearray(prefix)
         args = iter(args)
         v = values % escape(next(args), conn)
-        if isinstance(v, text_type):
+        if isinstance(v, str):
             v = v.encode(encoding, 'surrogateescape')
         sql += v
         rows = 0
         for arg in args:
             v = values % escape(arg, conn)
-            if isinstance(v, text_type):
+            if isinstance(v, str):
                 v = v.encode(encoding, 'surrogateescape')
             if len(sql) + len(v) + len(postfix) + 1 > max_stmt_length:
                 rows += self.execute(sql + postfix)
@@ -251,7 +251,7 @@ class Cursor(object):
 
         q = "CALL %s(%s)" % (procname,
                              ','.join(['@_%s_%d' % (procname, i)
-                                       for i in range_type(len(args))]))
+                                       for i in range(len(args))]))
         self._query(q)
         self._executed = q
         return args
@@ -463,7 +463,7 @@ class SSCursor(Cursor):
             size = self.arraysize
 
         rows = []
-        for i in range_type(size):
+        for i in range(size):
             row = self.read_next()
             if row is None:
                 self._show_warnings()
@@ -480,7 +480,7 @@ class SSCursor(Cursor):
                 raise err.NotSupportedError(
                         "Backwards scrolling not supported by this cursor")
 
-            for _ in range_type(value):
+            for _ in range(value):
                 self.read_next()
             self.rownumber += value
         elif mode == 'absolute':
@@ -489,7 +489,7 @@ class SSCursor(Cursor):
                     "Backwards scrolling not supported by this cursor")
 
             end = value - self.rownumber
-            for _ in range_type(end):
+            for _ in range(end):
                 self.read_next()
             self.rownumber = value
         else:

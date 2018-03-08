@@ -1,4 +1,4 @@
-from ._compat import text_type, long_type, JYTHON, IRONPYTHON, unichr
+from ._compat import str, int, JYTHON, IRONPYTHON, chr
 
 import datetime
 from decimal import Decimal
@@ -17,7 +17,7 @@ def escape_item(val, charset, mapping=None):
     # Fallback to default when no encoder found
     if not encoder:
         try:
-            encoder = mapping[text_type]
+            encoder = mapping[str]
         except KeyError:
             raise TypeError("no default type converter defined")
 
@@ -56,7 +56,7 @@ def escape_int(value, mapping=None):
 def escape_float(value, mapping=None):
     return ('%.15g' % value)
 
-_escape_table = [unichr(x) for x in range(128)]
+_escape_table = [chr(x) for x in range(128)]
 _escape_table[0] = u'\\0'
 _escape_table[ord('\\')] = u'\\\\'
 _escape_table[ord('\n')] = u'\\n'
@@ -345,10 +345,10 @@ def convert_characters(connection, field, data):
 encoders = {
     bool: escape_bool,
     int: escape_int,
-    long_type: escape_int,
+    int: escape_int,
     float: escape_float,
     str: escape_str,
-    text_type: escape_unicode,
+    str: escape_unicode,
     tuple: escape_sequence,
     list: escape_sequence,
     set: escape_sequence,

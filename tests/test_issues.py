@@ -5,7 +5,7 @@ import sys
 
 import trio_mysql
 from trio_mysql import cursors
-from trio_mysql._compat import text_type
+from trio_mysql._compat import str
 from trio_mysql.tests import base
 import pytest
 
@@ -508,7 +508,7 @@ class TestGitHubIssues(base.TrioMySQLTestCase):
                     # Warnings should have errorcode and string message, just like exceptions
                     self.assertEqual(len(e.args), 2)
                     self.assertEqual(e.args[0], 1292)
-                    self.assertTrue(isinstance(e.args[1], text_type))
+                    self.assertTrue(isinstance(e.args[1], str))
                 else:
                     self.fail("Should raise Warning")
                 finally:
