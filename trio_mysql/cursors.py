@@ -309,10 +309,10 @@ class Cursor(object):
         return res
 
     if sys.version_info < (3,5,2):
-        def __aiter__(self):
+        async def __aiter__(self):
             return self
     else:
-        async def __aiter__(self):
+        def __aiter__(self):
             return self
 
     async def __anext__(self):
@@ -369,9 +369,6 @@ class Cursor(object):
         for w in ws:
             msg = w[-1]
             warnings.warn(err.Warning(*w[1:3]), stacklevel=4)
-
-    def __iter__(self):
-        return iter(self.fetchone, None)
 
     Warning = err.Warning
     Error = err.Error

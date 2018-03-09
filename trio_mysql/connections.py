@@ -1372,7 +1372,7 @@ class MySQLResult(object):
             first_packet = await self.connection._read_packet()
 
             if first_packet.is_ok_packet():
-                await self._read_ok_packet(first_packet)
+                self._read_ok_packet(first_packet)
             elif first_packet.is_load_local_packet():
                 await self._read_load_local_packet(first_packet)
             else:
@@ -1389,7 +1389,7 @@ class MySQLResult(object):
         first_packet = await self.connection._read_packet()
 
         if first_packet.is_ok_packet():
-            await self._read_ok_packet(first_packet)
+            self._read_ok_packet(first_packet)
             self.unbuffered_active = False
             self.connection = None
         elif first_packet.is_load_local_packet():
