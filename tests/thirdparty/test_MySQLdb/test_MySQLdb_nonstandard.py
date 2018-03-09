@@ -4,7 +4,6 @@ import trio_mysql
 _mysql = trio_mysql
 from trio_mysql.constants import FIELD_TYPE
 from tests import base
-from trio_mysql._compat import int
 
 
 class TestDBAPISet:
