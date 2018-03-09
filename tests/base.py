@@ -7,8 +7,11 @@ import warnings
 import trio_mysql
 from trio_mysql._compat import CPYTHON
 
+class FakeUnittestcase:
+    def assertEqual(self, a,b,r=None):
+        assert a == b, (a,b,r)
 
-class TrioMySQLTestCase:
+class TrioMySQLTestCase(FakeUnittestcase):
     # You can specify your test environment creating a file named
     #  "databases.json" or editing the `databases` variable below.
     fname = os.path.join(os.path.dirname(__file__), "databases.json")
@@ -41,10 +44,11 @@ class TrioMySQLTestCase:
     async def setUp(self):
         self.connections = []
         for params in self.databases:
-            self.connections.append(trio_mysql.connect(**params))
-        self.addCleanup(self._teardown_connections)
+            conn = trio_mysql.connect(**params)
+            await conn.connect()
+            self.connections.append(conn)
 
-    async def _teardown_connections(self):
+    async def tearDown(self):
         for connection in self.connections:
             await connection.aclose()
 

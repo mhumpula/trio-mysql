@@ -1,20 +1,26 @@
 import pytest
 import inspect
+import traceback
 from trio.testing import trio_test
 
 class _Setup:
+    obj = None
     def __init__(self):
         self.cleans = []
 
-    async def setup(self, obj):
+    async def __call__(self, obj):
         self.obj = obj
         await obj.setUp()
 
     async def teardown(self):
-        await self.obj.tearDown()
-        while self.cleans:
-            p,a,k = self.cleans.pop()
-            await p(*a,**k)
+        try:
+            while self.cleans:
+                p,a,k = self.cleans.pop()
+                await p(*a,**k)
+            if self.obj is not None:
+                await self.obj.tearDown()
+        except Exception as exc:
+            traceback.print_exc()
 
 @pytest.fixture
 async def set_me_up():
