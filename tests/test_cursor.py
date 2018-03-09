@@ -18,7 +18,8 @@ class CursorTest(base.TrioMySQLTestCase):
             "('row1'), ('row2'), ('row3'), ('row4'), ('row5')")
         cursor.close()
         self.test_connection = trio_mysql.connect(**self.databases[0])
-        self.addCleanup(self.test_connection.close)
+        await self.test_connection.connect()
+        self.addCleanup(self.test_connection.aclose)
 
     async def test_cleanup_rows_unbuffered(self, set_me_up):
         await set_me_up(self)
