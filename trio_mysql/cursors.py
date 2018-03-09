@@ -65,11 +65,17 @@ class Cursor(object):
             self.connection = None
 
     def __enter__(self):
+        raise RuntimeError("You need to use 'async with'")
+
+    def __exit__(self, *tb):
+        raise RuntimeError("You need to use 'async with'")
+
+    async def __aenter__(self):
         return self
 
-    def __exit__(self, *exc_info):
+    async def __aexit__(self, *exc_info):
         del exc_info
-        self.close()
+        await self.aclose()
 
     def _get_db(self):
         if not self.connection:

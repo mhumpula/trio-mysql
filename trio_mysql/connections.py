@@ -695,7 +695,8 @@ class Connection(object):
         return ctx
 
     async def __aexit__(self, *tb):
-        with trio.move_on_after(1, shield=True):
+        with trio.move_on_after(1) as scope:
+            scope.shield = True
             await self.aclose()
 
     async def aclose(self):
@@ -923,6 +924,7 @@ class Connection(object):
 
     async def __aenter__(self):
         await self.connect()
+        return self
 
     async def connect(self, sock=None):
         self._closed = False
@@ -1054,7 +1056,6 @@ class Connection(object):
         return data
 
     async def _write_bytes(self, data):
-        self._sock.settimeout(self._write_timeout)
         try:
             await self._sock.send_all(data)
         except IOError as e:
