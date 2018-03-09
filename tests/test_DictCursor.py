@@ -11,6 +11,7 @@ class TestDictCursor(base.TrioMySQLTestCase):
     fred = {'name': 'fred', 'age': 100, 'DOB': datetime.datetime(1911, 9, 12, 1, 1, 1)}
 
     cursor_type = trio_mysql.cursors.DictCursor
+    conn = None
 
     async def setUp(self):
         await super().setUp()
@@ -30,8 +31,9 @@ class TestDictCursor(base.TrioMySQLTestCase):
         await c.executemany("insert into dictcursor values (%s,%s,%s)", data)
 
     async def tearDown(self):
-        c = self.conn.cursor()
-        await c.execute("drop table dictcursor")
+        if self.conn is not None:
+            async with self.conn.cursor() as c:
+                await c.execute("drop table dictcursor")
         await super().tearDown()
 
     async def _ensure_cursor_expired(self, cursor):
@@ -59,7 +61,7 @@ class TestDictCursor(base.TrioMySQLTestCase):
         self.assertEqual([bob], r, "fetch a 1 row result via fetchall failed via DictCursor")
         # same test again but iterate over the
         await c.execute("SELECT * from dictcursor where name='bob'")
-        for r in c:
+        async for r in c:
             self.assertEqual(bob, r, "fetch a 1 row result via iteration failed via DictCursor")
         # get all 3 row via fetchall
         await c.execute("SELECT * from dictcursor")
@@ -67,7 +69,9 @@ class TestDictCursor(base.TrioMySQLTestCase):
         self.assertEqual([bob,jim,fred], r, "fetchall failed via DictCursor")
         #same test again but do a list comprehension
         await c.execute("SELECT * from dictcursor")
-        r = list(c)
+        r = []
+        async for res in c:
+            r.append(res)
         self.assertEqual([bob,jim,fred], r, "DictCursor should be iterable")
         # get all 2 row via fetchmany
         await c.execute("SELECT * from dictcursor")
@@ -99,7 +103,9 @@ class TestDictCursor(base.TrioMySQLTestCase):
                          "fetchall failed via MyDictCursor")
 
         await cur.execute("SELECT * FROM dictcursor")
-        r = list(cur)
+        r = []
+        async for res in cur:
+            r.append(res)
         self.assertEqual([bob, jim, fred], r,
                          "list failed via MyDictCursor")
 
@@ -114,5 +120,5 @@ class TestSSDictCursor(TestDictCursor):
     cursor_type = trio_mysql.cursors.SSDictCursor
 
     async def _ensure_cursor_expired(self, cursor):
-        list(await cursor.fetchall_unbuffered())
+        await cursor.fetchall()
 
