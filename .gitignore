@@ -2,6 +2,7 @@
 *.pyo
 __pycache__
 .coverage
+/.cache
 /dist
 /trio_mysql.egg-info
 /.tox
@@ -10,3 +11,6 @@ __pycache__
 
 /.idea
 docs/build
+
+*.swp
+*~
