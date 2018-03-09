@@ -10,6 +10,7 @@ class TestNextset(base.TrioMySQLTestCase):
         await super().setUp()
         self.con = self.connections[0]
 
+    @pytest.mark.trio
     async def test_nextset(self, set_me_up):
         await set_me_up(self)
         cur = self.con.cursor()
@@ -22,6 +23,7 @@ class TestNextset(base.TrioMySQLTestCase):
         self.assertEqual([(2,)], list(cur))
         assert await cur.nextset() is None
 
+    @pytest.mark.trio
     async def test_skip_nextset(self, set_me_up):
         await set_me_up(self)
         cur = self.con.cursor()
@@ -31,6 +33,7 @@ class TestNextset(base.TrioMySQLTestCase):
         await cur.execute("SELECT 42")
         self.assertEqual([(42,)], list(cur))
 
+    @pytest.mark.trio
     async def test_ok_and_next(self, set_me_up):
         await set_me_up(self)
         cur = self.con.cursor()
@@ -42,6 +45,7 @@ class TestNextset(base.TrioMySQLTestCase):
         assert not await cur.nextset()
 
     @pytest.mark.xfail
+    @pytest.mark.trio
     async def test_multi_cursor(self, set_me_up):
         await set_me_up(self)
         cur1 = self.con.cursor()
@@ -59,6 +63,7 @@ class TestNextset(base.TrioMySQLTestCase):
         self.assertEqual([(2,)], list(cur1))
         assert await cur1.nextset() is None
 
+    @pytest.mark.trio
     async def test_multi_statement_warnings(self, set_me_up):
         await set_me_up(self)
         cursor = self.con.cursor()

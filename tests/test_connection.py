@@ -107,6 +107,7 @@ class TestAuthentication(base.TrioMySQLTestCase):
         #else:
         #    print("plugin: %r" % r[0])
 
+    @pytest.mark.trio
     async def test_plugin(self, set_me_up):
         await set_me_up(self)
         # Bit of an assumption that the current user is a native password
@@ -115,6 +116,7 @@ class TestAuthentication(base.TrioMySQLTestCase):
     @pytest.mark.xfail(raises=base.SkipTest)
     @pytest.mark.skipif(not socket_auth, "connection to unix_socket required")
     @pytest.mark.skipif(socket_found, "socket plugin already installed")
+    @pytest.mark.trio
     async def testSocketAuthInstallPlugin(self, set_me_up):
         await set_me_up(self)
         # needs plugin. lets install it.
@@ -139,6 +141,7 @@ class TestAuthentication(base.TrioMySQLTestCase):
 
     @pytest.mark.skipif(not socket_auth, "connection to unix_socket required")
     @pytest.mark.skipif(not socket_found, "no socket plugin")
+    @pytest.mark.trio
     async def testSocketAuth(self, set_me_up):
         await set_me_up(self)
         await self.realtestSocketAuth()
@@ -191,6 +194,7 @@ class TestAuthentication(base.TrioMySQLTestCase):
     @pytest.mark.xfail(raises=base.SkipTest)
     @pytest.mark.skipif(not socket_auth, "connection to unix_socket required")
     @pytest.mark.skipif(two_questions_found, "two_questions plugin already installed")
+    @pytest.mark.trio
     async def testDialogAuthTwoQuestionsInstallPlugin(self, set_me_up):
         await set_me_up(self)
         # needs plugin. lets install it.
@@ -207,6 +211,7 @@ class TestAuthentication(base.TrioMySQLTestCase):
 
     @pytest.mark.skipif(not socket_auth, "connection to unix_socket required")
     @pytest.mark.skipif(not two_questions_found, "no two questions auth plugin")
+    @pytest.mark.trio
     async def testDialogAuthTwoQuestions(self, set_me_up):
         await set_me_up(self)
         await self.realTestDialogAuthTwoQuestions()
@@ -224,6 +229,7 @@ class TestAuthentication(base.TrioMySQLTestCase):
     @pytest.mark.xfail(raises=base.SkipTest)
     @pytest.mark.skipif(not socket_auth, "connection to unix_socket required")
     @pytest.mark.skipif(three_attempts_found, "three_attempts plugin already installed")
+    @pytest.mark.trio
     async def testDialogAuthThreeAttemptsQuestionsInstallPlugin(self, set_me_up):
         await set_me_up(self)
         # needs plugin. lets install it.
@@ -240,6 +246,7 @@ class TestAuthentication(base.TrioMySQLTestCase):
 
     @pytest.mark.skipif(not socket_auth, "connection to unix_socket required")
     @pytest.mark.skipif(not three_attempts_found, "no three attempts plugin")
+    @pytest.mark.trio
     async def testDialogAuthThreeAttempts(self, set_me_up):
         await set_me_up(self)
         await self.realTestDialogAuthThreeAttempts()
@@ -270,6 +277,7 @@ class TestAuthentication(base.TrioMySQLTestCase):
     @pytest.mark.skipif(pam_found, "pam plugin already installed")
     @pytest.mark.skipif(os.environ.get('PASSWORD') is None, "PASSWORD env var required")
     @pytest.mark.skipif(os.environ.get('PAMSERVICE') is None, "PAMSERVICE env var required")
+    @pytest.mark.trio
     async def testPamAuthInstallPlugin(self, set_me_up):
         await set_me_up(self)
         # needs plugin. lets install it.
@@ -289,6 +297,7 @@ class TestAuthentication(base.TrioMySQLTestCase):
     @pytest.mark.skipif(not pam_found, "no pam plugin")
     @pytest.mark.skipif(os.environ.get('PASSWORD') is None, "PASSWORD env var required")
     @pytest.mark.skipif(os.environ.get('PAMSERVICE') is None, "PAMSERVICE env var required")
+    @pytest.mark.trio
     async def testPamAuth(self, set_me_up):
         await set_me_up(self)
         await self.realTestPamAuth()
@@ -332,6 +341,7 @@ class TestAuthentication(base.TrioMySQLTestCase):
     @pytest.mark.xfail(raises=base.SkipTest)
     @pytest.mark.skipif(not socket_auth, "connection to unix_socket required")
     @pytest.mark.skipif(not mysql_old_password_found, "no mysql_old_password plugin")
+    @pytest.mark.trio
     async def testMySQLOldPasswordAuth(self, set_me_up):
         await set_me_up(self)
         if self.mysql_server_is(self.connections[0], (5, 7, 0)):
@@ -374,6 +384,7 @@ class TestAuthentication(base.TrioMySQLTestCase):
 
     @pytest.mark.skipif(not socket_auth, "connection to unix_socket required")
     @pytest.mark.skipif(not sha256_password_found, "no sha256 password authentication plugin found")
+    @pytest.mark.trio
     async def testAuthSHA256(self, set_me_up):
         await set_me_up(self)
         c = self.connections[0].cursor()
@@ -392,6 +403,7 @@ class TestAuthentication(base.TrioMySQLTestCase):
 
 class TestConnection(base.TrioMySQLTestCase):
 
+    @pytest.mark.trio
     async def test_utf8mb4(self, set_me_up):
         await set_me_up(self)
         """This test requires MySQL >= 5.5"""
@@ -399,6 +411,7 @@ class TestConnection(base.TrioMySQLTestCase):
         arg['charset'] = 'utf8mb4'
         conn = trio_mysql.connect(**arg)
 
+    @pytest.mark.trio
     async def test_largedata(self, set_me_up):
         await set_me_up(self)
         """Large query and response (>=16MB)"""
@@ -411,6 +424,7 @@ class TestConnection(base.TrioMySQLTestCase):
         await cur.execute("SELECT '" + t + "'")
         assert (await cur.fetchone())[0] == t
 
+    @pytest.mark.trio
     async def test_autocommit(self, set_me_up):
         await set_me_up(self)
         con = self.connections[0]
@@ -425,6 +439,7 @@ class TestConnection(base.TrioMySQLTestCase):
         await cur.execute("SELECT @@AUTOCOMMIT")
         assert (await cur.fetchone())[0] == 0
 
+    @pytest.mark.trio
     async def test_select_db(self, set_me_up):
         await set_me_up(self)
         con = self.connections[0]
@@ -439,6 +454,7 @@ class TestConnection(base.TrioMySQLTestCase):
         await cur.execute('SELECT database()')
         assert (await cur.fetchone())[0] == other_db
 
+    @pytest.mark.trio
     async def test_connection_gone_away(self, set_me_up):
         await set_me_up(self)
         """
@@ -455,6 +471,7 @@ class TestConnection(base.TrioMySQLTestCase):
         #self.assertEqual(cm.exception.args[0], 2006)
         self.assertIn(cm.exception.args[0], (2006, 2013))
 
+    @pytest.mark.trio
     async def test_init_command(self, set_me_up):
         await set_me_up(self)
         conn = trio_mysql.connect(
@@ -468,6 +485,7 @@ class TestConnection(base.TrioMySQLTestCase):
         with self.assertRaises(trio_mysql.err.Error):
             await conn.ping(reconnect=False)
 
+    @pytest.mark.trio
     async def test_read_default_group(self, set_me_up):
         await set_me_up(self)
         conn = trio_mysql.connect(
@@ -476,6 +494,7 @@ class TestConnection(base.TrioMySQLTestCase):
         )
         self.assertTrue(conn.open)
 
+    @pytest.mark.trio
     async def test_context(self, set_me_up):
         await set_me_up(self)
         with self.assertRaises(ValueError):
@@ -496,12 +515,14 @@ class TestConnection(base.TrioMySQLTestCase):
             self.assertEqual(1, (await cur.fetchone())[0])
             await cur.execute('drop table test')
 
+    @pytest.mark.trio
     async def test_set_charset(self, set_me_up):
         await set_me_up(self)
         c = trio_mysql.connect(**self.databases[0])
         await c.set_charset('utf8')
         # TODO validate setting here
 
+    @pytest.mark.trio
     async def test_defer_connect(self, set_me_up):
         await set_me_up(self)
         import socket
@@ -526,6 +547,7 @@ class TestConnection(base.TrioMySQLTestCase):
             sock.close()
 
     @pytest.mark.skipif(sys.version_info[0:2] < (3,2), "required py-3.2")
+    @pytest.mark.trio
     async def test_no_delay_warning(self, set_me_up):
         await set_me_up(self)
         current_db = self.databases[0].copy()
@@ -544,6 +566,7 @@ def escape_foo(x, d):
 
 
 class TestEscape(base.TrioMySQLTestCase):
+    @pytest.mark.trio
     async def test_escape_string(self, set_me_up):
         await set_me_up(self)
         con = self.connections[0]
@@ -554,6 +577,7 @@ class TestEscape(base.TrioMySQLTestCase):
         await cur.execute("SET sql_mode='NO_BACKSLASH_ESCAPES,NO_AUTO_CREATE_USER'")
         self.assertEqual(con.escape("foo'bar"), "'foo''bar'")
 
+    @pytest.mark.trio
     async def test_escape_builtin_encoders(self, set_me_up):
         await set_me_up(self)
         con = self.connections[0]
@@ -562,6 +586,7 @@ class TestEscape(base.TrioMySQLTestCase):
         val = datetime.datetime(2012, 3, 4, 5, 6)
         self.assertEqual(con.escape(val, con.encoders), "'2012-03-04 05:06:00'")
 
+    @pytest.mark.trio
     async def test_escape_custom_object(self, set_me_up):
         await set_me_up(self)
         con = self.connections[0]
@@ -570,6 +595,7 @@ class TestEscape(base.TrioMySQLTestCase):
         mapping = {Foo: escape_foo}
         self.assertEqual(con.escape(Foo(), mapping), "bar")
 
+    @pytest.mark.trio
     async def test_escape_fallback_encoder(self, set_me_up):
         await set_me_up(self)
         con = self.connections[0]
@@ -581,6 +607,7 @@ class TestEscape(base.TrioMySQLTestCase):
         mapping = {str: trio_mysql.escape_string}
         self.assertEqual(con.escape(Custom('foobar'), mapping), "'foobar'")
 
+    @pytest.mark.trio
     async def test_escape_no_default(self, set_me_up):
         await set_me_up(self)
         con = self.connections[0]
@@ -588,6 +615,7 @@ class TestEscape(base.TrioMySQLTestCase):
 
         self.assertRaises(TypeError, con.escape, 42, {})
 
+    @pytest.mark.trio
     async def test_escape_dict_value(self, set_me_up):
         await set_me_up(self)
         con = self.connections[0]
@@ -597,6 +625,7 @@ class TestEscape(base.TrioMySQLTestCase):
         mapping[Foo] = escape_foo
         self.assertEqual(con.escape({'foo': Foo()}, mapping), {'foo': "bar"})
 
+    @pytest.mark.trio
     async def test_escape_list_item(self, set_me_up):
         await set_me_up(self)
         con = self.connections[0]
@@ -606,6 +635,7 @@ class TestEscape(base.TrioMySQLTestCase):
         mapping[Foo] = escape_foo
         self.assertEqual(con.escape([Foo()], mapping), "(bar)")
 
+    @pytest.mark.trio
     async def test_previous_cursor_not_closed(self, set_me_up):
         await set_me_up(self)
         con = self.connections[0]
@@ -615,6 +645,7 @@ class TestEscape(base.TrioMySQLTestCase):
         await cur2.execute("SELECT 3")
         assert (await cur2.fetchone())[0] == 3
 
+    @pytest.mark.trio
     async def test_commit_during_multi_result(self, set_me_up):
         await set_me_up(self)
         con = self.connections[0]

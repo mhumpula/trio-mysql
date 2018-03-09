@@ -1,3 +1,5 @@
+import pytest
+
 from tests.thirdparty.test_MySQLdb import dbapi20
 import trio_mysql
 from tests import base
@@ -20,6 +22,7 @@ class test_MySQLdb(dbapi20.TestDatabaseAPI20):
     result set. MySQL always returns a result set; it's just that
     some things return empty result sets."""
 
+    @pytest.mark.trio
     async def test_fetchall(self, set_me_up):
         await set_me_up(self)
         con = self._connect()
@@ -71,6 +74,7 @@ class test_MySQLdb(dbapi20.TestDatabaseAPI20):
         finally:
             con.close()
 
+    @pytest.mark.trio
     async def test_fetchone(self, set_me_up):
         await set_me_up(self)
         con = self._connect()
@@ -117,6 +121,7 @@ class test_MySQLdb(dbapi20.TestDatabaseAPI20):
             con.close()
 
     # Same complaint as for fetchall and fetchone
+    @pytest.mark.trio
     async def test_rowcount(self, set_me_up):
         await set_me_up(self)
         con = self._connect()
@@ -147,6 +152,7 @@ class test_MySQLdb(dbapi20.TestDatabaseAPI20):
         finally:
             con.close()
 
+    @pytest.mark.trio
     async def test_callproc(self, set_me_up):
         await set_me_up(self)
         pass # performed in test_MySQL_capabilities
@@ -169,6 +175,7 @@ class test_MySQLdb(dbapi20.TestDatabaseAPI20):
         'If cleaning up is needed after nextSetTest'
         await cur.execute("drop procedure deleteme")
 
+    @pytest.mark.trio
     async def test_nextset(self, set_me_up):
         await set_me_up(self)
         from warnings import warn

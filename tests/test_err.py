@@ -1,3 +1,5 @@
+import pytest
+
 from trio_mysql import err
 
 
@@ -6,6 +8,7 @@ __all__ = ["TestRaiseException"]
 
 class TestRaiseException:
 
+    @pytest.mark.trio
     async def test_raise_mysql_exception(self, set_me_up):
         await set_me_up(self)
         data = b"\xff\x15\x04Access denied"
@@ -13,6 +16,7 @@ class TestRaiseException:
             err.raise_mysql_exception(data)
         self.assertEqual(cm.exception.args, (1045, 'Access denied'))
 
+    @pytest.mark.trio
     async def test_raise_mysql_exception_client_protocol_41(self, set_me_up):
         await set_me_up(self)
         data = b"\xff\x15\x04#28000Access denied"

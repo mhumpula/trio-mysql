@@ -1,3 +1,5 @@
+import pytest
+
 from trio_mysql.optionfile import Parser
 
 try:
@@ -20,6 +22,7 @@ skip-slave-start
 
 class TestParser:
 
+    @pytest.mark.trio
     async def test_string(self, set_me_up):
         await set_me_up(self)
         parser = Parser()

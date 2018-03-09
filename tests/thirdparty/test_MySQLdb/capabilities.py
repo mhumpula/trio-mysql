@@ -5,6 +5,7 @@
 
 """
 import sys
+import pytest
 from time import time
 
 class TestDatabase:
@@ -99,6 +100,7 @@ class TestDatabase:
             if not self.debug:
                 await self.cursor.execute('drop table %s' % (self.table))
 
+    @pytest.mark.trio
     async def test_transactions(self, set_me_up):
         await set_me_up(self)
         columndefs = ( 'col1 INT', 'col2 VARCHAR(255)')
@@ -133,6 +135,7 @@ class TestDatabase:
         self.assertTrue(len(l) == 1, "ROLLBACK didn't work")
         await self.cursor.execute('drop table %s' % (self.table))
 
+    @pytest.mark.trio
     async def test_truncation(self, set_me_up):
         await set_me_up(self)
         columndefs = ( 'col1 INT', 'col2 VARCHAR(255)')
@@ -184,6 +187,7 @@ class TestDatabase:
         await self.connection.rollback()
         await self.cursor.execute('drop table %s' % (self.table))
 
+    @pytest.mark.trio
     async def test_CHAR(self, set_me_up):
         await set_me_up(self)
         # Character data
@@ -193,6 +197,7 @@ class TestDatabase:
             ('col1 char(255)','col2 char(255)'),
             generator)
 
+    @pytest.mark.trio
     async def test_INT(self, set_me_up):
         await set_me_up(self)
         # Number data
@@ -202,6 +207,7 @@ class TestDatabase:
             ('col1 INT',),
             generator)
 
+    @pytest.mark.trio
     async def test_DECIMAL(self, set_me_up):
         await set_me_up(self)
         # DECIMAL
@@ -212,6 +218,7 @@ class TestDatabase:
             ('col1 DECIMAL(5,2)',),
             generator)
 
+    @pytest.mark.trio
     async def test_DATE(self, set_me_up):
         await set_me_up(self)
         ticks = time()
@@ -221,6 +228,7 @@ class TestDatabase:
                  ('col1 DATE',),
                  generator)
 
+    @pytest.mark.trio
     async def test_TIME(self, set_me_up):
         await set_me_up(self)
         ticks = time()
@@ -230,6 +238,7 @@ class TestDatabase:
                  ('col1 TIME',),
                  generator)
 
+    @pytest.mark.trio
     async def test_DATETIME(self, set_me_up):
         await set_me_up(self)
         ticks = time()
@@ -239,6 +248,7 @@ class TestDatabase:
                  ('col1 DATETIME',),
                  generator)
 
+    @pytest.mark.trio
     async def test_TIMESTAMP(self, set_me_up):
         await set_me_up(self)
         ticks = time()
@@ -248,6 +258,7 @@ class TestDatabase:
                  ('col1 TIMESTAMP',),
                  generator)
 
+    @pytest.mark.trio
     async def test_fractional_TIMESTAMP(self, set_me_up):
         await set_me_up(self)
         ticks = time()
@@ -257,6 +268,7 @@ class TestDatabase:
                  ('col1 TIMESTAMP',),
                  generator)
 
+    @pytest.mark.trio
     async def test_LONG(self, set_me_up):
         await set_me_up(self)
         def generator(row,col):
@@ -268,6 +280,7 @@ class TestDatabase:
                  ('col1 INT', 'col2 LONG'),
                  generator)
 
+    @pytest.mark.trio
     async def test_TEXT(self, set_me_up):
         await set_me_up(self)
         def generator(row,col):
@@ -279,6 +292,7 @@ class TestDatabase:
                  ('col1 INT', 'col2 TEXT'),
                  generator)
 
+    @pytest.mark.trio
     async def test_LONG_BYTE(self, set_me_up):
         await set_me_up(self)
         def generator(row,col):
@@ -290,6 +304,7 @@ class TestDatabase:
                  ('col1 INT','col2 LONG BYTE'),
                  generator)
 
+    @pytest.mark.trio
     async def test_BLOB(self, set_me_up):
         await set_me_up(self)
         def generator(row,col):

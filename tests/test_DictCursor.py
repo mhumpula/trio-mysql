@@ -1,5 +1,6 @@
 from tests import base
 import trio_mysql.cursors
+import pytest
 
 import datetime
 import warnings
@@ -39,6 +40,7 @@ class TestDictCursor(base.TrioMySQLTestCase):
     async def _ensure_cursor_expired(self, cursor):
         pass
 
+    @pytest.mark.trio
     async def test_DictCursor(self, set_me_up):
         await set_me_up(self)
         bob, jim, fred = self.bob.copy(), self.jim.copy(), self.fred.copy()
@@ -79,6 +81,7 @@ class TestDictCursor(base.TrioMySQLTestCase):
         self.assertEqual([bob, jim], r, "fetchmany failed via DictCursor")
         await self._ensure_cursor_expired(c)
 
+    @pytest.mark.trio
     async def test_custom_dict(self, set_me_up):
         await set_me_up(self)
         class MyDict(dict): pass

@@ -16,6 +16,7 @@ __all__ = ["TestConversion", "TestCursor", "TestBulkInserts"]
 
 
 class TestConversion(base.TrioMySQLTestCase):
+    @pytest.mark.trio
     async def test_datatypes(self, set_me_up):
         await set_me_up(self)
         """ test every data type """
@@ -56,6 +57,7 @@ class TestConversion(base.TrioMySQLTestCase):
         finally:
             await c.execute("drop table test_datatypes")
 
+    @pytest.mark.trio
     async def test_dict(self, set_me_up):
         await set_me_up(self)
         """ test dict escaping """
@@ -69,6 +71,7 @@ class TestConversion(base.TrioMySQLTestCase):
         finally:
             await c.execute("drop table test_dict")
 
+    @pytest.mark.trio
     async def test_string(self, set_me_up):
         await set_me_up(self)
         conn = self.connections[0]
@@ -82,6 +85,7 @@ class TestConversion(base.TrioMySQLTestCase):
         finally:
             await c.execute("drop table test_dict")
 
+    @pytest.mark.trio
     async def test_integer(self, set_me_up):
         await set_me_up(self)
         conn = self.connections[0]
@@ -95,6 +99,7 @@ class TestConversion(base.TrioMySQLTestCase):
         finally:
             await c.execute("drop table test_dict")
 
+    @pytest.mark.trio
     async def test_binary(self, set_me_up):
         await set_me_up(self)
         """test binary data"""
@@ -108,6 +113,7 @@ class TestConversion(base.TrioMySQLTestCase):
             await c.execute("select b from test_binary")
             self.assertEqual(data, (await c.fetchone())[0])
 
+    @pytest.mark.trio
     async def test_blob(self, set_me_up):
         await set_me_up(self)
         """test blob data"""
@@ -121,6 +127,7 @@ class TestConversion(base.TrioMySQLTestCase):
             await c.execute("select b from test_blob")
             self.assertEqual(data, (await c.fetchone())[0])
 
+    @pytest.mark.trio
     async def test_untyped(self, set_me_up):
         await set_me_up(self)
         """ test conversion of null, empty string """
@@ -131,6 +138,7 @@ class TestConversion(base.TrioMySQLTestCase):
         await c.execute("select '',null")
         self.assertEqual((u'',None), await c.fetchone())
 
+    @pytest.mark.trio
     async def test_timedelta(self, set_me_up):
         await set_me_up(self)
         """ test timedelta conversion """
@@ -147,6 +155,7 @@ class TestConversion(base.TrioMySQLTestCase):
                          await c.fetchone())
 
     @pytest.mark.xfail(raises=base.SkipTest)
+    @pytest.mark.trio
     async def test_datetime_microseconds(self, set_me_up):
         await set_me_up(self)
         """ test datetime conversion w microseconds"""
@@ -222,6 +231,7 @@ class TestCursor(base.TrioMySQLTestCase):
     #
     #    self.assertEqual(r, c.description)
 
+    @pytest.mark.trio
     async def test_fetch_no_result(self, set_me_up):
         await set_me_up(self)
         """ test a fetchone() with no rows """
@@ -235,6 +245,7 @@ class TestCursor(base.TrioMySQLTestCase):
         finally:
             await c.execute("drop table test_nr")
 
+    @pytest.mark.trio
     async def test_aggregates(self, set_me_up):
         await set_me_up(self)
         """ test aggregate functions """
@@ -250,6 +261,7 @@ class TestCursor(base.TrioMySQLTestCase):
         finally:
             await c.execute('drop table test_aggregates')
 
+    @pytest.mark.trio
     async def test_single_tuple(self, set_me_up):
         await set_me_up(self)
         """ test a single tuple """
@@ -265,6 +277,7 @@ class TestCursor(base.TrioMySQLTestCase):
         c.close()
 
     @pytest.mark.xfail(raises=base.SkipTest)
+    @pytest.mark.trio
     async def test_json(self, set_me_up):
         await set_me_up(self)
         args = self.databases[0].copy()
@@ -320,6 +333,7 @@ PRIMARY KEY (id)
         result = await cursor.fetchall()
         self.assertEqual(sorted(data), sorted(result))
 
+    @pytest.mark.trio
     async def test_bulk_insert(self, set_me_up):
         await set_me_up(self)
         conn = self.connections[0]
@@ -335,6 +349,7 @@ PRIMARY KEY (id)
         await cursor.execute('commit')
         await self._verify_records(data)
 
+    @pytest.mark.trio
     async def test_bulk_insert_multiline_statement(self, set_me_up):
         await set_me_up(self)
         conn = self.connections[0]
@@ -360,6 +375,7 @@ values (0,
         await cursor.execute('commit')
         await self._verify_records(data)
 
+    @pytest.mark.trio
     async def test_bulk_insert_single_record(self, set_me_up):
         await set_me_up(self)
         conn = self.connections[0]
@@ -370,6 +386,7 @@ values (0,
         await cursor.execute('commit')
         await self._verify_records(data)
 
+    @pytest.mark.trio
     async def test_issue_288(self, set_me_up):
         await set_me_up(self)
         """executemany should work with "insert ... on update" """
@@ -398,6 +415,7 @@ age = values(age)"""))
         await cursor.execute('commit')
         await self._verify_records(data)
 
+    @pytest.mark.trio
     async def test_warnings(self, set_me_up):
         await set_me_up(self)
         con = self.connections[0]

@@ -18,6 +18,7 @@ except AttributeError:
 __all__ = ["TestOldIssues", "TestNewIssues", "TestGitHubIssues"]
 
 class TestOldIssues(base.TrioMySQLTestCase):
+    @pytest.mark.trio
     async def test_issue_3(self, set_me_up):
         await set_me_up(self)
         """ undefined methods datetime_or_None, date_or_None """
@@ -40,6 +41,7 @@ class TestOldIssues(base.TrioMySQLTestCase):
         finally:
             await c.execute("drop table issue3")
 
+    @pytest.mark.trio
     async def test_issue_4(self, set_me_up):
         await set_me_up(self)
         """ can't retrieve TIMESTAMP fields """
@@ -56,6 +58,7 @@ class TestOldIssues(base.TrioMySQLTestCase):
         finally:
             await c.execute("drop table issue4")
 
+    @pytest.mark.trio
     async def test_issue_5(self, set_me_up):
         await set_me_up(self)
         """ query on information_schema.tables fails """
@@ -63,6 +66,7 @@ class TestOldIssues(base.TrioMySQLTestCase):
         cur = con.cursor()
         await cur.execute("select * from information_schema.tables")
 
+    @pytest.mark.trio
     async def test_issue_6(self, set_me_up):
         await set_me_up(self)
         """ exception: TypeError: ord() expected a character, but string of length 0 found """
@@ -74,6 +78,7 @@ class TestOldIssues(base.TrioMySQLTestCase):
         await c.execute("select * from user")
         conn.close()
 
+    @pytest.mark.trio
     async def test_issue_8(self, set_me_up):
         await set_me_up(self)
         """ Primary Key and Index error when selecting data """
@@ -93,6 +98,7 @@ KEY (`station`,`dh`,`echeance`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;""")
         finally:
             await c.execute("drop table test")
 
+    @pytest.mark.trio
     async def test_issue_9(self, set_me_up):
         await set_me_up(self)
         """ sets DeprecationWarning in Python 2.6 """
@@ -101,6 +107,7 @@ KEY (`station`,`dh`,`echeance`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;""")
         except DeprecationWarning:
             self.fail()
 
+    @pytest.mark.trio
     async def test_issue_13(self, set_me_up):
         await set_me_up(self)
         """ can't handle large result fields """
@@ -121,6 +128,7 @@ KEY (`station`,`dh`,`echeance`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;""")
         finally:
             await cur.execute("drop table issue13")
 
+    @pytest.mark.trio
     async def test_issue_15(self, set_me_up):
         await set_me_up(self)
         """ query should be expanded before perform character encoding """
@@ -137,6 +145,7 @@ KEY (`station`,`dh`,`echeance`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;""")
         finally:
             await c.execute("drop table issue15")
 
+    @pytest.mark.trio
     async def test_issue_16(self, set_me_up):
         await set_me_up(self)
         """ Patch for string and tuple escaping """
@@ -154,6 +163,7 @@ KEY (`station`,`dh`,`echeance`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;""")
             await c.execute("drop table issue16")
 
     @pytest.mark.skip("test_issue_17() requires a custom, legacy MySQL configuration and will not be run.")
+    @pytest.mark.trio
     async def test_issue_17(self, set_me_up):
         await set_me_up(self)
         """could not connect mysql use passwod"""
@@ -180,6 +190,7 @@ KEY (`station`,`dh`,`echeance`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;""")
             await c.execute("drop table issue17")
 
 class TestNewIssues(base.TrioMySQLTestCase):
+    @pytest.mark.trio
     async def test_issue_34(self, set_me_up):
         await set_me_up(self)
         try:
@@ -190,6 +201,7 @@ class TestNewIssues(base.TrioMySQLTestCase):
         except Exception:
             self.fail()
 
+    @pytest.mark.trio
     async def test_issue_33(self, set_me_up):
         await set_me_up(self)
         conn = trio_mysql.connect(charset="utf8", **self.databases[0])
@@ -201,6 +213,7 @@ class TestNewIssues(base.TrioMySQLTestCase):
         self.assertEqual(u"Pi\xdfata", (await c.fetchone())[0])
 
     @pytest.mark.skip("This test requires manual intervention")
+    @pytest.mark.trio
     async def test_issue_35(self, set_me_up):
         await set_me_up(self)
         conn = self.connections[0]
@@ -212,6 +225,7 @@ class TestNewIssues(base.TrioMySQLTestCase):
         except trio_mysql.OperationalError as e:
             self.assertEqual(2013, e.args[0])
 
+    @pytest.mark.trio
     async def test_issue_36(self, set_me_up):
         await set_me_up(self)
         # connection 0 is super user, connection 1 isn't
@@ -249,6 +263,7 @@ class TestNewIssues(base.TrioMySQLTestCase):
         finally:
             del self.connections[1]
 
+    @pytest.mark.trio
     async def test_issue_37(self, set_me_up):
         await set_me_up(self)
         conn = self.connections[0]
@@ -258,6 +273,7 @@ class TestNewIssues(base.TrioMySQLTestCase):
         self.assertEqual(0, await c.execute("SET @foo = 'bar'"))
         await c.execute("set @foo = 'bar'")
 
+    @pytest.mark.trio
     async def test_issue_38(self, set_me_up):
         await set_me_up(self)
         conn = self.connections[0]
@@ -291,6 +307,7 @@ class TestNewIssues(base.TrioMySQLTestCase):
             await c.execute("drop table issue54")
 
 class TestGitHubIssues(base.TrioMySQLTestCase):
+    @pytest.mark.trio
     async def test_issue_66(self, set_me_up):
         await set_me_up(self)
         """ 'Connection' object has no attribute 'insert_id' """
@@ -308,6 +325,7 @@ class TestGitHubIssues(base.TrioMySQLTestCase):
         finally:
             await c.execute("drop table issue66")
 
+    @pytest.mark.trio
     async def test_issue_79(self, set_me_up):
         await set_me_up(self)
         """ Duplicate field overwrites the previous one in the result of DictCursor """
@@ -336,6 +354,7 @@ class TestGitHubIssues(base.TrioMySQLTestCase):
             await c.execute("drop table a")
             await c.execute("drop table b")
 
+    @pytest.mark.trio
     async def test_issue_95(self, set_me_up):
         await set_me_up(self)
         """ Leftover trailing OK packet for "CALL my_sp" queries """
@@ -357,6 +376,7 @@ class TestGitHubIssues(base.TrioMySQLTestCase):
                 warnings.filterwarnings("ignore")
                 await cur.execute("DROP PROCEDURE IF EXISTS `foo`")
 
+    @pytest.mark.trio
     async def test_issue_114(self, set_me_up):
         await set_me_up(self)
         """ autocommit is not set after reconnecting with ping() """
@@ -383,6 +403,7 @@ class TestGitHubIssues(base.TrioMySQLTestCase):
         self.assertTrue((await c.fetchone())[0])
         conn.close()
 
+    @pytest.mark.trio
     async def test_issue_175(self, set_me_up):
         await set_me_up(self)
         """ The number of fields returned by server is read in wrong way """
@@ -400,6 +421,7 @@ class TestGitHubIssues(base.TrioMySQLTestCase):
                     warnings.filterwarnings("ignore")
                     await cur.execute('drop table if exists test_field_count')
 
+    @pytest.mark.trio
     async def test_issue_321(self, set_me_up):
         await set_me_up(self)
         """ Test iterable as query argument. """
@@ -428,6 +450,7 @@ class TestGitHubIssues(base.TrioMySQLTestCase):
         self.assertEqual(await cur.fetchone(), (u"b", u"\u0430"))
         self.assertEqual(await cur.fetchone(), (u"c", u"\u0430"))
 
+    @pytest.mark.trio
     async def test_issue_364(self, set_me_up):
         await set_me_up(self)
         """ Test mixed unicode/binary arguments in executemany. """
@@ -459,6 +482,7 @@ class TestGitHubIssues(base.TrioMySQLTestCase):
         # test multi insert with unicode query
         await cur.executemany(usql, args=(values, values, values))
 
+    @pytest.mark.trio
     async def test_issue_363(self, set_me_up):
         await set_me_up(self)
         """ Test binary / geometry types. """
@@ -512,6 +536,7 @@ class TestGitHubIssues(base.TrioMySQLTestCase):
         # vary across implementations
         self.assertTrue(isinstance(row[0], bytes))
 
+    @pytest.mark.trio
     async def test_issue_491(self, set_me_up):
         await set_me_up(self)
         """ Test warning propagation """

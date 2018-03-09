@@ -1,3 +1,5 @@
+import pytest
+
 import warnings
 
 from tests import base
@@ -21,6 +23,7 @@ class CursorTest(base.TrioMySQLTestCase):
         await self.test_connection.connect()
         self.addCleanup(self.test_connection.aclose)
 
+    @pytest.mark.trio
     async def test_cleanup_rows_unbuffered(self, set_me_up):
         await set_me_up(self)
         conn = self.test_connection
@@ -40,6 +43,7 @@ class CursorTest(base.TrioMySQLTestCase):
         assert await c2.fetchone() == (1,)
         assert await c2.fetchone() is None
 
+    @pytest.mark.trio
     async def test_cleanup_rows_buffered(self, set_me_up):
         await set_me_up(self)
         conn = self.test_connection
@@ -60,6 +64,7 @@ class CursorTest(base.TrioMySQLTestCase):
         assert await c2.fetchone() == (1,)
         assert await c2.fetchone() is None
 
+    @pytest.mark.trio
     async def test_executemany(self, set_me_up):
         await set_me_up(self)
         conn = self.test_connection

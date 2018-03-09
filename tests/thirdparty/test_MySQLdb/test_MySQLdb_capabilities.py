@@ -1,3 +1,5 @@
+import pytest
+
 from . import capabilities
 import trio_mysql
 from tests import base
@@ -20,6 +22,7 @@ class test_MySQLdb(capabilities.TestDatabase):
     def quote_identifier(self, ident):
         return "`%s`" % ident
 
+    @pytest.mark.trio
     async def test_TIME(self, set_me_up):
         await set_me_up(self)
         from datetime import timedelta
@@ -29,6 +32,7 @@ class test_MySQLdb(capabilities.TestDatabase):
                  ('col1 TIME',),
                  generator)
 
+    @pytest.mark.trio
     async def test_TINYINT(self, set_me_up):
         await set_me_up(self)
         # Number data
@@ -41,6 +45,7 @@ class test_MySQLdb(capabilities.TestDatabase):
             ('col1 TINYINT',),
             generator)
 
+    @pytest.mark.trio
     async def test_stored_procedures(self, set_me_up):
         await set_me_up(self)
         db = self.connection
@@ -68,6 +73,7 @@ class test_MySQLdb(capabilities.TestDatabase):
             await c.execute("DROP PROCEDURE IF EXISTS test_sp")
             await c.execute('drop table %s' % (self.table))
 
+    @pytest.mark.trio
     async def test_small_CHAR(self, set_me_up):
         await set_me_up(self)
         # Character data
@@ -80,6 +86,7 @@ class test_MySQLdb(capabilities.TestDatabase):
             ('col1 char(1)','col2 char(1)'),
             generator)
 
+    @pytest.mark.trio
     async def test_bug_2671682(self, set_me_up):
         await set_me_up(self)
         from trio_mysql.constants import ER
@@ -88,18 +95,22 @@ class test_MySQLdb(capabilities.TestDatabase):
         except self.connection.ProgrammingError as msg:
             self.assertEqual(msg.args[0], ER.NO_SUCH_TABLE)
 
+    @pytest.mark.trio
     async def test_ping(self, set_me_up):
         await set_me_up(self)
         await self.connection.ping()
 
+    @pytest.mark.trio
     async def test_literal_int(self, set_me_up):
         await set_me_up(self)
         self.assertTrue("2" == self.connection.literal(2))
 
+    @pytest.mark.trio
     async def test_literal_float(self, set_me_up):
         await set_me_up(self)
         self.assertTrue("3.1415" == self.connection.literal(3.1415))
 
+    @pytest.mark.trio
     async def test_literal_string(self, set_me_up):
         await set_me_up(self)
         self.assertTrue("'foo'" == self.connection.literal("foo"))

@@ -140,11 +140,13 @@ class TestDatabaseAPI20:
         except AttributeError:
             self.fail("No connect method found in self.driver module")
 
+    @pytest.mark.trio
     async def test_connect(self, set_me_up):
         await set_me_up(self)
         con = self._connect()
         con.close()
 
+    @pytest.mark.trio
     async def test_apilevel(self, set_me_up):
         await set_me_up(self)
         try:
@@ -155,6 +157,7 @@ class TestDatabaseAPI20:
         except AttributeError:
             self.fail("Driver doesn't define apilevel")
 
+    @pytest.mark.trio
     async def test_threadsafety(self, set_me_up):
         await set_me_up(self)
         try:
@@ -165,6 +168,7 @@ class TestDatabaseAPI20:
         except AttributeError:
             self.fail("Driver doesn't define threadsafety")
 
+    @pytest.mark.trio
     async def test_paramstyle(self, set_me_up):
         await set_me_up(self)
         try:
@@ -177,6 +181,7 @@ class TestDatabaseAPI20:
         except AttributeError:
             self.fail("Driver doesn't define paramstyle")
 
+    @pytest.mark.trio
     async def test_Exceptions(self, set_me_up):
         await set_me_up(self)
         # Make sure required exceptions exist, and are in the
@@ -205,6 +210,7 @@ class TestDatabaseAPI20:
             issubclass(self.driver.NotSupportedError,self.driver.Error)
             )
 
+    @pytest.mark.trio
     async def test_ExceptionsAsConnectionAttributes(self, set_me_up):
         await set_me_up(self)
         # OPTIONAL EXTENSION
@@ -226,6 +232,7 @@ class TestDatabaseAPI20:
         self.assertTrue(con.NotSupportedError is drv.NotSupportedError)
 
 
+    @pytest.mark.trio
     async def test_commit(self, set_me_up):
         await set_me_up(self)
         con = self._connect()
@@ -235,6 +242,7 @@ class TestDatabaseAPI20:
         finally:
             con.close()
 
+    @pytest.mark.trio
     async def test_rollback(self, set_me_up):
         await set_me_up(self)
         con = self._connect()
@@ -246,6 +254,7 @@ class TestDatabaseAPI20:
             except self.driver.NotSupportedError:
                 pass
 
+    @pytest.mark.trio
     async def test_cursor(self, set_me_up):
         await set_me_up(self)
         con = self._connect()
@@ -254,6 +263,7 @@ class TestDatabaseAPI20:
         finally:
             con.close()
 
+    @pytest.mark.trio
     async def test_cursor_isolation(self, set_me_up):
         await set_me_up(self)
         con = self._connect()
@@ -274,6 +284,7 @@ class TestDatabaseAPI20:
         finally:
             con.close()
 
+    @pytest.mark.trio
     async def test_description(self, set_me_up):
         await set_me_up(self)
         con = self._connect()
@@ -308,6 +319,7 @@ class TestDatabaseAPI20:
         finally:
             con.close()
 
+    @pytest.mark.trio
     async def test_rowcount(self, set_me_up):
         await set_me_up(self)
         con = self._connect()
@@ -339,6 +351,7 @@ class TestDatabaseAPI20:
             con.close()
 
     lower_func = 'lower'
+    @pytest.mark.trio
     async def test_callproc(self, set_me_up):
         await set_me_up(self)
         con = self._connect()
@@ -359,6 +372,7 @@ class TestDatabaseAPI20:
         finally:
             con.close()
 
+    @pytest.mark.trio
     async def test_close(self, set_me_up):
         await set_me_up(self)
         con = self._connect()
@@ -379,6 +393,7 @@ class TestDatabaseAPI20:
         # connection.close should raise an Error if called more than once
         self.assertRaises(self.driver.Error,con.close)
 
+    @pytest.mark.trio
     async def test_execute(self, set_me_up):
         await set_me_up(self)
         con = self._connect()
@@ -438,6 +453,7 @@ class TestDatabaseAPI20:
             'incorrectly'
             )
 
+    @pytest.mark.trio
     async def test_executemany(self, set_me_up):
         await set_me_up(self)
         con = self._connect()
@@ -491,6 +507,7 @@ class TestDatabaseAPI20:
         finally:
             con.close()
 
+    @pytest.mark.trio
     async def test_fetchone(self, set_me_up):
         await set_me_up(self)
         con = self._connect()
@@ -557,6 +574,7 @@ class TestDatabaseAPI20:
             ]
         return populate
 
+    @pytest.mark.trio
     async def test_fetchmany(self, set_me_up):
         await set_me_up(self)
         con = self._connect()
@@ -641,6 +659,7 @@ class TestDatabaseAPI20:
         finally:
             con.close()
 
+    @pytest.mark.trio
     async def test_fetchall(self, set_me_up):
         await set_me_up(self)
         con = self._connect()
@@ -693,6 +712,7 @@ class TestDatabaseAPI20:
         finally:
             con.close()
 
+    @pytest.mark.trio
     async def test_mixedfetch(self, set_me_up):
         await set_me_up(self)
         con = self._connect()
@@ -747,6 +767,7 @@ class TestDatabaseAPI20:
         raise NotImplementedError('Helper not implemented')
         #await cur.execute("drop procedure deleteme")
 
+    @pytest.mark.trio
     async def test_nextset(self, set_me_up):
         await set_me_up(self)
         con = self._connect()
@@ -777,10 +798,12 @@ class TestDatabaseAPI20:
         finally:
             con.close()
 
+    @pytest.mark.trio
     async def test_nextset(self, set_me_up):
         await set_me_up(self)
         raise NotImplementedError('Drivers need to override this test')
 
+    @pytest.mark.trio
     async def test_arraysize(self, set_me_up):
         await set_me_up(self)
         # Not much here - rest of the tests for this are in test_fetchmany
@@ -793,6 +816,7 @@ class TestDatabaseAPI20:
         finally:
             con.close()
 
+    @pytest.mark.trio
     async def test_setinputsizes(self, set_me_up):
         await set_me_up(self)
         con = self._connect()
@@ -803,6 +827,7 @@ class TestDatabaseAPI20:
         finally:
             con.close()
 
+    @pytest.mark.trio
     async def test_setoutputsize_basic(self, set_me_up):
         await set_me_up(self)
         # Basic test is to make sure setoutputsize doesn't blow up
@@ -815,11 +840,13 @@ class TestDatabaseAPI20:
         finally:
             con.close()
 
+    @pytest.mark.trio
     async def test_setoutputsize(self, set_me_up):
         await set_me_up(self)
         # Real test for setoutputsize is driver dependant
         raise NotImplementedError('Driver need to override this test')
 
+    @pytest.mark.trio
     async def test_None(self, set_me_up):
         await set_me_up(self)
         con = self._connect()
@@ -835,6 +862,7 @@ class TestDatabaseAPI20:
         finally:
             con.close()
 
+    @pytest.mark.trio
     async def test_Date(self, set_me_up):
         await set_me_up(self)
         d1 = self.driver.Date(2002,12,25)
@@ -842,6 +870,7 @@ class TestDatabaseAPI20:
         # Can we assume this? API doesn't specify, but it seems implied
         # self.assertEqual(str(d1),str(d2))
 
+    @pytest.mark.trio
     async def test_Time(self, set_me_up):
         await set_me_up(self)
         t1 = self.driver.Time(13,45,30)
@@ -849,6 +878,7 @@ class TestDatabaseAPI20:
         # Can we assume this? API doesn't specify, but it seems implied
         # self.assertEqual(str(t1),str(t2))
 
+    @pytest.mark.trio
     async def test_Timestamp(self, set_me_up):
         await set_me_up(self)
         t1 = self.driver.Timestamp(2002,12,25,13,45,30)
@@ -858,35 +888,41 @@ class TestDatabaseAPI20:
         # Can we assume this? API doesn't specify, but it seems implied
         # self.assertEqual(str(t1),str(t2))
 
+    @pytest.mark.trio
     async def test_Binary(self, set_me_up):
         await set_me_up(self)
         b = self.driver.Binary(b'Something')
         b = self.driver.Binary(b'')
 
+    @pytest.mark.trio
     async def test_STRING(self, set_me_up):
         await set_me_up(self)
         self.assertTrue(hasattr(self.driver,'STRING'),
             'module.STRING must be defined'
             )
 
+    @pytest.mark.trio
     async def test_BINARY(self, set_me_up):
         await set_me_up(self)
         self.assertTrue(hasattr(self.driver,'BINARY'),
             'module.BINARY must be defined.'
             )
 
+    @pytest.mark.trio
     async def test_NUMBER(self, set_me_up):
         await set_me_up(self)
         self.assertTrue(hasattr(self.driver,'NUMBER'),
             'module.NUMBER must be defined.'
             )
 
+    @pytest.mark.trio
     async def test_DATETIME(self, set_me_up):
         await set_me_up(self)
         self.assertTrue(hasattr(self.driver,'DATETIME'),
             'module.DATETIME must be defined.'
             )
 
+    @pytest.mark.trio
     async def test_ROWID(self, set_me_up):
         await set_me_up(self)
         self.assertTrue(hasattr(self.driver,'ROWID'),
