@@ -3,8 +3,7 @@ import inspect
 from trio.testing import trio_test
 
 class _Setup:
-    def __init__(self, obj):
-        self.obj = obj
+    def __init__(self):
         self.cleans = []
 
     async def setup(self, obj):
