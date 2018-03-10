@@ -5,7 +5,8 @@ If you are looking for information on a specific function, class or
 method, this part of the documentation is for you.
 
 For more information, please read the `Python Database API specification
-<https://www.python.org/dev/peps/pep-0249>`_.
+<https://www.python.org/dev/peps/pep-0249>`_. You'll have to add ``async``
+/ ``await`` keywords as appropriate.
 
 .. toctree::
   :maxdepth: 2
