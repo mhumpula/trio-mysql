@@ -193,8 +193,11 @@ class Cursor(object):
                                          self.max_stmt_length,
                                          self._get_db().encoding)
 
-        self.rowcount = sum(await self.execute(query, arg) for arg in args)
-        return self.rowcount
+        cnt = 0
+        for arg in args:
+            cnt += await self.execute(query, arg)
+        self.rowcount = cnt
+        return cnt
 
     async def _do_execute_many(self, prefix, values, postfix, args, max_stmt_length, encoding):
         conn = self._get_db()

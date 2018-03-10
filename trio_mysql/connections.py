@@ -540,13 +540,18 @@ class Connection(object):
     See `Connection <https://www.python.org/dev/peps/pep-0249/#connection-objects>`_ in the
     specification.
 
-    Note that you must wrap this object in an ``async with`` block to
-    actually use it.
+    Note that you must either call :meth:`trio_mysql.connections.Connection.connect`, or
+    use an ``async with`` block, to actually use a connection.
+
+    While connected, ``async with connection as cursor:`` will also work
+    (PyMySQL compatibility).
     """
 
     _sock = None
     _auth_plugin_name = ''
-    _closed = False
+    _closed = True
+
+    _curs = None
 
     def __init__(self, host=None, user=None, password="",
                  database=None, port=0, unix_socket=None,
@@ -695,6 +700,10 @@ class Connection(object):
         return ctx
 
     async def __aexit__(self, *tb):
+        if self._curs is not None:
+            c,self._curs = self._curs,None
+            return await c.__aexit__(*tb)
+
         with trio.move_on_after(1) as scope:
             scope.shield = True
             await self.aclose()
@@ -706,10 +715,11 @@ class Connection(object):
         See `Connection.close() <https://www.python.org/dev/peps/pep-0249/#Connection.close>`_
         in the specification.
         
-        :raise Error: If the connection is already closed.
+        :raise err.Error: If the connection is already closed.
         """
         if self._closed:
-            raise err.Error("Already closed")
+            # raise err.Error("Already closed")
+            return
         self._closed = True
         if self._sock is None:
             return
@@ -738,6 +748,7 @@ class Connection(object):
             except:
                 pass
         self._sock = None
+        self._closed = True
 
     __del__ = _force_close
 
@@ -888,7 +899,7 @@ class Connection(object):
     async def kill(self, thread_id):
         arg = struct.pack('<I', thread_id)
         await self._execute_command(COMMAND.COM_PROCESS_KILL, arg)
-        return self._read_ok_packet()
+        return await self._read_ok_packet()
 
     async def ping(self, reconnect=True):
         """
@@ -899,7 +910,7 @@ class Connection(object):
         """
         if self._sock is None:
             if reconnect:
-                self.connect()
+                await self.connect()
                 reconnect = False
             else:
                 raise err.Error("Already closed")
@@ -908,7 +919,7 @@ class Connection(object):
             await self._read_ok_packet()
         except Exception:
             if reconnect:
-                self.connect()
+                await self.connect()
                 await self.ping(False)
             else:
                 raise
@@ -922,9 +933,24 @@ class Connection(object):
         self.charset = charset
         self.encoding = encoding
 
+    def __enter__(self):
+        raise RuntimeError("You must use __aenter__")
+
+    def __exit__(self):
+        raise RuntimeError("You must use __aenter__")
+
     async def __aenter__(self):
-        await self.connect()
-        return self
+        if self._closed:
+            await self.connect()
+            return self
+        if self._curs is None:
+            self._curs = self.cursor()
+            try:
+                return await self._curs.__aenter__()
+            except BaseException:
+                self._curs = None
+                raise
+        raise RuntimeError("You can't nest cursors")
 
     async def connect(self, sock=None):
         self._closed = False
@@ -932,7 +958,7 @@ class Connection(object):
             if sock is None:
                 if self.unix_socket and self.host in ('localhost', '127.0.0.1'):
                     sock = await trio.socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-                    sock.connect(self.unix_socket)
+                    await sock.connect(self.unix_socket)
                     self.host_info = "Localhost via UNIX socket"
                     if DEBUG: print('connected using unix_socket')
                 else:
@@ -959,12 +985,13 @@ class Connection(object):
             if self.init_command is not None:
                 c = self.cursor()
                 await c.execute(self.init_command)
-                c.close()
-                self.commit()
+                await c.aclose()
+                await self.commit()
 
             if self.autocommit_mode is not None:
                 await self.autocommit(self.autocommit_mode)
         except BaseException as e:
+            self._closed = True
             if sock is not None:
                 try:
                     sock.close()
@@ -1094,7 +1121,7 @@ class Connection(object):
         """
         
         if not self._sock:
-            raise err.InterfaceError("(0, '')")
+            raise err.InterfaceError("This connection is closed")
 
         # If the last query was unbuffered, make sure it finishes before
         # sending new commands
