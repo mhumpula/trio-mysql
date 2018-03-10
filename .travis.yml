@@ -33,8 +33,8 @@ before_script:
     - ./.travis/initializedb.sh
     - mysql -e 'create database test_trio_mysql  DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;'
     - mysql -e 'create database test_trio_mysql2 DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;'
-    - mysql -u root -e "create user travis_trio_mysql2 identified by 'some password'; grant all on test_trio_mysql2.* to travis_trio_mysql2;"
-    - mysql -u root -e "create user travis_trio_mysql2@localhost identified by 'some password'; grant all on test_trio_mysql2.* to travis_trio_mysql2@localhost;"
+    - mysql -u root -e "create user travis identified by 'some password'; grant all on test_trio_mysql2.* to travis;"
+    - mysql -u root -e "create user travis@localhost identified by 'some password'; grant all on test_trio_mysql2.* to travis@localhost;"
     - mysql -e 'select VERSION()'
     - python -VV
     - rm -f ~/.my.cnf # set in .travis.initialize.db.sh for the above commands - we should be using database.json however
