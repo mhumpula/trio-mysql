@@ -1065,10 +1065,10 @@ class Connection(object):
         return packet
 
     async def _read_bytes(self, num_bytes):
-        while True:
+        rdata = b""
+        while self._sock is not None and len(rdata) < num_bytes:
             try:
-                data = await self._sock.receive_some(num_bytes)
-                break
+                data = await self._sock.receive_some(num_bytes-len(rdata))
             except (IOError, OSError) as e:
                 if e.errno == errno.EINTR:
                     continue
@@ -1076,11 +1076,15 @@ class Connection(object):
                 raise err.OperationalError(
                     CR.CR_SERVER_LOST,
                     "Lost connection to MySQL server during query (%s)" % (e,))
-        if len(data) < num_bytes:
+            else:
+                if data == b"":
+                    break
+                rdata += data
+        if len(rdata) < num_bytes:
             self._force_close()
             raise err.OperationalError(
                 CR.CR_SERVER_LOST, "Lost connection to MySQL server during query")
-        return data
+        return rdata
 
     async def _write_bytes(self, data):
         try:
