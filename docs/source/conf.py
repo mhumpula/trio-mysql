@@ -20,6 +20,20 @@ import os
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.insert(0, os.path.abspath('../../'))
 
+# Warn about all references to unknown targets
+nitpicky = True
+# Except for these ones, which we expect to point to unknown targets:
+nitpick_ignore = [
+    # Format is ("sphinx reference type", "string"), e.g.:
+    ("py:meth", "trio_mysql.connections.Connection.connect"),
+    ("py:exc", "err.Error"),
+    ("py:exc", "Error"),
+    ("py:class", "Cursor"),
+    ("py:class", "SSCursor"),
+    ("py:class", "DictCursor"),
+    ("py:class", "SSDictCursor"),
+]
+
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.

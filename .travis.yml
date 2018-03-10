@@ -10,12 +10,17 @@ matrix:
   include:
     - addons:
         mariadb: 5.5
-      python: "3.5"
+      python: "3.6"
 
     - addons:
         mariadb: 10.1
       python: "pypy"
 
+    - python: 3.6
+      env: CHECK_DOCS=1
+
+    - python: 3.6
+      env: CHECK_FORMATTING=1
 
 # different py version from 5.6 and 5.7 as cache seems to be based on py version
 # http://dev.mysql.com/downloads/mysql/5.7.html has latest development release version
@@ -36,7 +41,7 @@ before_script:
     - export COVERALLS_PARALLEL=true
 
 script:
-  - coverage run ./runtests.py
+  - .travis/run.sh
 
 after_success:
     - coveralls

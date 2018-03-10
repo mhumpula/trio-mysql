@@ -91,24 +91,29 @@ The following examples make use of a simple table
                                  charset='utf8mb4',
                                  cursorclass=trio_mysql.cursors.DictCursor)
 
-    try:
-        async with connection.cursor() as cursor:
+    async with connection as conn:
+        async with conn.cursor() as cursor:
             # Create a new record
             sql = "INSERT INTO `users` (`email`, `password`) VALUES (%s, %s)"
             await cursor.execute(sql, ('webmaster@python.org', 'very-secret'))
 
         # connection is not autocommit by default. So you must commit to save
         # your changes.
-        connection.commit()
+        conn.commit()
 
-        async with connection.cursor() as cursor:
+        # Alternately, you can set up a transaction:
+        async with conn.transaction():
+            async with conn.cursor() as cursor:
+                # Create a new record
+                sql = "INSERT INTO `users` (`email`, `password`) VALUES (%s, %s)"
+                await cursor.execute(sql, ('webmistress@python.org', 'totally-secret'))
+
+        async with conn.cursor() as cursor:
             # Read a single record
             sql = "SELECT `id`, `password` FROM `users` WHERE `email`=%s"
             await cursor.execute(sql, ('webmaster@python.org',))
             result = await cursor.fetchone()
             print(result)
-    finally:
-        connection.close()
 
 This example will print:
 

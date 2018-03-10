@@ -15,12 +15,17 @@ with io.open('./README.rst', encoding='utf-8') as f:
 setup(
     name="trio_mysql",
     version=version,
-    url='https://github.com/python-trio/trio_mysql/',
+    url='https://github.com/python-trio/trio-mysql/',
     author='Matthias Urlichs',
     author_email='matthias@urlichs.de',
     description='Pure Python MySQL Driver',
     long_description=readme,
     license="MIT",
+    install_requires=[
+        "trio",
+    ],
+    setup_requires=['pytest-runner'],
+    tests_require=['pytest'],
     packages=find_packages(),
     classifiers=[
         'Development Status :: 5 - Production/Stable',
