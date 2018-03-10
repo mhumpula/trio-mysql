@@ -957,7 +957,7 @@ class Connection(object):
         try:
             if sock is None:
                 if self.unix_socket and self.host in ('localhost', '127.0.0.1'):
-                    sock = await trio.socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+                    sock = trio.socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
                     await sock.connect(self.unix_socket)
                     self.host_info = "Localhost via UNIX socket"
                     if DEBUG: print('connected using unix_socket')
