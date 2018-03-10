@@ -8,8 +8,12 @@ class _Setup:
     def __init__(self):
         self.cleans = []
 
+    def addCleanup(self,p,*a,**k):
+        self.cleans.append((p,a,k))
+
     async def __call__(self, obj):
         self.obj = obj
+        obj.addCleanup = self.addCleanup
         await obj.setUp()
 
     async def teardown(self):

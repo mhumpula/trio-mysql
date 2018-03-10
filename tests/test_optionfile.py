@@ -1,11 +1,9 @@
 import pytest
 
 from trio_mysql.optionfile import Parser
+from tests import base
 
-try:
-    from cStringIO import StringIO
-except ImportError:
-    from io import StringIO
+from io import StringIO
 
 
 __all__ = ['TestParser']
@@ -20,11 +18,9 @@ skip-slave-start
 """)
 
 
-class TestParser:
+class TestParser(base.FakeUnittestcase):
 
-    @pytest.mark.trio
-    async def test_string(self, set_me_up):
-        await set_me_up(self)
+    def test_string(self):
         parser = Parser()
         parser.read_file(StringIO(_cfg_file))
         self.assertEqual(parser.get("default", "string"), "foo")

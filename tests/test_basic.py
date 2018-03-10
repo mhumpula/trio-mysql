@@ -108,7 +108,7 @@ class TestConversion(base.TrioMySQLTestCase):
         await self.safe_create_table(
             conn, "test_binary", "create table test_binary (b binary(255))")
 
-        with conn.cursor() as c:
+        async with conn.cursor() as c:
             await c.execute("insert into test_binary (b) values (%s)", (data,))
             await c.execute("select b from test_binary")
             self.assertEqual(data, (await c.fetchone())[0])
@@ -122,7 +122,7 @@ class TestConversion(base.TrioMySQLTestCase):
         await self.safe_create_table(
             conn, "test_blob", "create table test_blob (b blob)")
 
-        with conn.cursor() as c:
+        async with conn.cursor() as c:
             await c.execute("insert into test_blob (b) values (%s)", (data,))
             await c.execute("select b from test_blob")
             self.assertEqual(data, (await c.fetchone())[0])
@@ -274,7 +274,7 @@ class TestCursor(base.TrioMySQLTestCase):
         await c.execute("insert into mystuff (id) values (2)")
         await c.execute("select id from mystuff where id in %s", ((1,),))
         self.assertEqual([(1,)], list(await c.fetchall()))
-        c.close()
+        await c.aclose()
 
     @pytest.mark.xfail(raises=base.SkipTest)
     @pytest.mark.trio
@@ -283,6 +283,7 @@ class TestCursor(base.TrioMySQLTestCase):
         args = self.databases[0].copy()
         args["charset"] = "utf8mb4"
         conn = trio_mysql.connect(**args)
+        await conn.connect()
         if not self.mysql_server_is(conn, (5, 7, 0)):
             raise base.SkipTest("JSON type is not supported on MySQL <= 5.6")
 
@@ -303,6 +304,7 @@ create table test_json (
         await cur.execute("SELECT CAST(%s AS JSON) AS x", (json_str,))
         res = (await cur.fetchone())[0]
         self.assertEqual(json.loads(res), json.loads(json_str))
+        await conn.aclose()
 
 
 class TestBulkInserts(base.TrioMySQLTestCase):
@@ -422,8 +424,8 @@ age = values(age)"""))
         cur = con.cursor()
         with warnings.catch_warnings(record=True) as ws:
             warnings.simplefilter("always")
-            cur.execute("drop table if exists no_exists_table")
+            await cur.execute("drop table if exists no_exists_table")
         self.assertEqual(len(ws), 1)
-        self.assertEqual(ws[0].category, trio_mysql.Warning)
+        self.assertEqual(ws[0].category, trio_mysql.Warning, vars(ws[0]))
         if u"no_exists_table" not in str(ws[0].message):
             self.fail("'no_exists_table' not in %s" % (str(ws[0].message),))

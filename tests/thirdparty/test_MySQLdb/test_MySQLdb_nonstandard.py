@@ -8,73 +8,57 @@ from trio_mysql.constants import FIELD_TYPE
 from tests import base
 
 
-class TestDBAPISet:
-    @pytest.mark.trio
-    async def test_set_equality(self, set_me_up):
-        await set_me_up(self)
+class TestDBAPISet(base.FakeUnittestcase):
+    def test_set_equality(self):
         self.assertTrue(trio_mysql.STRING == trio_mysql.STRING)
 
-    @pytest.mark.trio
-    async def test_set_inequality(self, set_me_up):
-        await set_me_up(self)
+    def test_set_inequality(self):
         self.assertTrue(trio_mysql.STRING != trio_mysql.NUMBER)
 
-    @pytest.mark.trio
-    async def test_set_equality_membership(self, set_me_up):
-        await set_me_up(self)
+    def test_set_equality_membership(self):
         self.assertTrue(FIELD_TYPE.VAR_STRING == trio_mysql.STRING)
 
-    @pytest.mark.trio
-    async def test_set_inequality_membership(self, set_me_up):
-        await set_me_up(self)
+    def test_set_inequality_membership(self):
         self.assertTrue(FIELD_TYPE.DATE != trio_mysql.STRING)
 
 
-class TestCoreModule:
+class TestCoreModule(base.FakeUnittestcase):
     """Core _mysql module features."""
 
-    @pytest.mark.trio
-    async def test_NULL(self, set_me_up):
-        await set_me_up(self)
+    async def test_NULL(self):
         """Should have a NULL constant."""
         self.assertEqual(_mysql.NULL, 'NULL')
 
-    @pytest.mark.trio
-    async def test_version(self, set_me_up):
-        await set_me_up(self)
+    async def test_version(self):
         """Version information sanity."""
         self.assertTrue(isinstance(_mysql.__version__, str))
 
         self.assertTrue(isinstance(_mysql.version_info, tuple))
         self.assertEqual(len(_mysql.version_info), 5)
 
-    @pytest.mark.trio
-    async def test_client_info(self, set_me_up):
-        await set_me_up(self)
+    async def test_client_info(self):
         self.assertTrue(isinstance(_mysql.get_client_info(), str))
 
-    @pytest.mark.trio
-    async def test_thread_safe(self, set_me_up):
-        await set_me_up(self)
+    async def test_thread_safe(self):
         self.assertTrue(isinstance(_mysql.thread_safe(), int))
 
 
-class TestCoreAPI:
+class TestCoreAPI(base.TrioMySQLTestCase):
     """Test _mysql interaction internals."""
 
     async def setUp(self):
         kwargs = base.TrioMySQLTestCase.databases[0].copy()
         kwargs["read_default_file"] = "~/.my.cnf"
         self.conn = _mysql.connect(**kwargs)
+        await self.conn.connect()
 
     async def tearDown(self):
-        self.conn.close()
+        await self.conn.aclose()
 
-    @pytest.mark.trio
-    async def test_thread_id(self, set_me_up):
-        await set_me_up(self)
+    @pytest.mark.skip("We don't think about threads")
+    def test_thread_id(self):
         tid = self.conn.thread_id()
-        self.assertTrue(isinstance(tid, (int, int)),
+        self.assertTrue(isinstance(tid, int),
                         "thread_id didn't return an integral value.")
 
         self.assertRaises(TypeError, self.conn.thread_id, ('evil',),

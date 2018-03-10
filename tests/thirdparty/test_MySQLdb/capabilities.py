@@ -7,8 +7,9 @@
 import sys
 import pytest
 from time import time
+from tests import base
 
-class TestDatabase:
+class DatabaseTest(base.TrioMySQLTestCase):
 
     db_module = None
     connect_args = ()
@@ -19,6 +20,7 @@ class TestDatabase:
 
     async def setUp(self):
         db = self.db_module.connect(*self.connect_args, **self.connect_kwargs)
+        await db.connect()
         self.connection = db
         self.cursor = db.cursor()
         self.BLOBText = ''.join([chr(i) for i in range(256)] * 100);
@@ -29,15 +31,18 @@ class TestDatabase:
     leak_test = True
 
     async def tearDown(self):
-        if self.leak_test:
-            import gc
-            del self.cursor
-            orphans = gc.collect()
-            self.assertFalse(orphans, "%d orphaned objects found after deleting cursor" % orphans)
+        try:
+            if self.leak_test:
+                import gc
+                del self.cursor
+                orphans = gc.collect()
+                self.assertFalse(orphans, "%d orphaned objects found after deleting cursor" % orphans)
 
-            del self.connection
-            orphans = gc.collect()
-            self.assertFalse(orphans, "%d orphaned objects found after deleting connection" % orphans)
+                del self.connection
+                orphans = gc.collect()
+                self.assertFalse(orphans, "%d orphaned objects found after deleting connection" % orphans)
+        finally:
+            await self.connection.aclose()
 
     async def table_exists(self, name):
         try:

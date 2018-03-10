@@ -10,6 +10,7 @@ class CursorTest(base.TrioMySQLTestCase):
         await super().setUp()
 
         conn = self.connections[0]
+        await conn.connect()
         await self.safe_create_table(
             conn,
             "test", "create table test (data varchar(10))",
@@ -18,7 +19,7 @@ class CursorTest(base.TrioMySQLTestCase):
         await cursor.execute(
             "insert into test (data) values "
             "('row1'), ('row2'), ('row3'), ('row4'), ('row5')")
-        cursor.close()
+        await cursor.aclose()
         self.test_connection = trio_mysql.connect(**self.databases[0])
         await self.test_connection.connect()
         self.addCleanup(self.test_connection.aclose)

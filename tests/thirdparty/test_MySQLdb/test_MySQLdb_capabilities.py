@@ -7,7 +7,7 @@ import warnings
 
 warnings.filterwarnings('error')
 
-class test_MySQLdb(capabilities.TestDatabase):
+class Test_MySQLdb(capabilities.DatabaseTest):
 
     db_module = trio_mysql
     connect_args = ()
@@ -51,7 +51,7 @@ class test_MySQLdb(capabilities.TestDatabase):
         db = self.connection
         c = self.cursor
         try:
-            self.create_table(('pos INT', 'tree CHAR(20)'))
+            await self.create_table(('pos INT', 'tree CHAR(20)'))
             await c.executemany("INSERT INTO %s (pos,tree) VALUES (%%s,%%s)" % self.table,
                           list(enumerate('ash birch cedar larch pine'.split())))
             await db.commit()
@@ -70,7 +70,9 @@ class test_MySQLdb(capabilities.TestDatabase):
             self.assertEqual(rows[0][0], 3)
             await c.nextset()
         finally:
-            await c.execute("DROP PROCEDURE IF EXISTS test_sp")
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                await c.execute("DROP PROCEDURE IF EXISTS test_sp")
             await c.execute('drop table %s' % (self.table))
 
     @pytest.mark.trio

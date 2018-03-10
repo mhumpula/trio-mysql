@@ -2,6 +2,7 @@ import gc
 import json
 import os
 import re
+import pytest
 import warnings
 
 import trio_mysql
@@ -10,6 +11,16 @@ from trio_mysql._compat import CPYTHON
 class FakeUnittestcase:
     def assertEqual(self, a,b,r=None):
         assert a == b, (a,b,r)
+    def assertIn(self, a,b,r=None):
+        assert a in b, (a,b,r)
+    def assertTrue(self, a,r=None):
+        assert a, (a,r)
+    def assertFalse(self, a,r=None):
+        assert not a, (a,r)
+    def assertRaises(self, *x):
+        return pytest.raises(*x)
+    def assertWarns(self, *x):
+        return pytest.warns(*x)
 
 class TrioMySQLTestCase(FakeUnittestcase):
     # You can specify your test environment creating a file named
@@ -60,22 +71,19 @@ class TrioMySQLTestCase(FakeUnittestcase):
         Also adds a cleanup rule to drop the table after the test
         completes.
         """
-        cursor = connection.cursor()
-
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            await cursor.execute("drop table if exists `%s`" % (tablename,))
-        await cursor.execute(ddl)
-        cursor.close()
+        async with connection.cursor() as cursor:
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                await cursor.execute("drop table if exists `%s`" % (tablename,))
+            await cursor.execute(ddl)
         if cleanup:
             self.addCleanup(self.drop_table, connection, tablename)
 
     async def drop_table(self, connection, tablename):
-        cursor = connection.cursor()
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            await cursor.execute("drop table if exists `%s`" % (tablename,))
-        cursor.close()
+        async with connection.cursor() as cursor:
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                await cursor.execute("drop table if exists `%s`" % (tablename,))
 
     def safe_gc_collect(self):
         """Ensure cycles are collected via gc.

@@ -5,7 +5,7 @@ import trio_mysql
 from tests import base
 
 
-class test_MySQLdb(dbapi20.TestDatabaseAPI20):
+class Test_MySQLdb(dbapi20.TestDatabaseAPI20):
     driver = trio_mysql
     connect_args = ()
     connect_kw_args = base.TrioMySQLTestCase.databases[0].copy()
@@ -25,7 +25,7 @@ class test_MySQLdb(dbapi20.TestDatabaseAPI20):
     @pytest.mark.trio
     async def test_fetchall(self, set_me_up):
         await set_me_up(self)
-        con = self._connect()
+        con = await self._connect()
         try:
             cur = con.cursor()
             # cursor.fetchall should raise an Error if called
@@ -72,12 +72,12 @@ class test_MySQLdb(dbapi20.TestDatabaseAPI20):
                 )
 
         finally:
-            con.close()
+            await con.aclose()
 
     @pytest.mark.trio
     async def test_fetchone(self, set_me_up):
         await set_me_up(self)
-        con = self._connect()
+        con = await self._connect()
         try:
             cur = con.cursor()
 
@@ -118,13 +118,13 @@ class test_MySQLdb(dbapi20.TestDatabaseAPI20):
 ##                 )
             self.assertTrue(cur.rowcount in (-1,1))
         finally:
-            con.close()
+            await con.aclose()
 
     # Same complaint as for fetchall and fetchone
     @pytest.mark.trio
     async def test_rowcount(self, set_me_up):
         await set_me_up(self)
-        con = self._connect()
+        con = await self._connect()
         try:
             cur = con.cursor()
             await self.executeDDL1(cur)
@@ -150,7 +150,7 @@ class test_MySQLdb(dbapi20.TestDatabaseAPI20):
 ##                 'no-result statements'
 ##                 )
         finally:
-            con.close()
+            await con.aclose()
 
     @pytest.mark.trio
     async def test_callproc(self, set_me_up):
@@ -179,7 +179,7 @@ class test_MySQLdb(dbapi20.TestDatabaseAPI20):
     async def test_nextset(self, set_me_up):
         await set_me_up(self)
         from warnings import warn
-        con = self._connect()
+        con = await self._connect()
         try:
             cur = con.cursor()
             if not hasattr(cur,'nextset'):
@@ -211,4 +211,4 @@ class test_MySQLdb(dbapi20.TestDatabaseAPI20):
                 await self.help_nextset_tearDown(cur)
 
         finally:
-            con.close()
+            await con.aclose()

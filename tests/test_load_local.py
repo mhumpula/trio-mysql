@@ -18,15 +18,12 @@ class TestLoadLocal(base.TrioMySQLTestCase):
         c = conn.cursor()
         await c.execute("CREATE TABLE test_load_local (a INTEGER, b INTEGER)")
         try:
-            self.assertRaises(
-                OperationalError,
-                await c.execute,
-                ("LOAD DATA LOCAL INFILE 'no_data.txt' INTO TABLE "
+            with self.assertRaises(OperationalError):
+                await c.execute ("LOAD DATA LOCAL INFILE 'no_data.txt' INTO TABLE "
                  "test_load_local fields terminated by ','")
-            )
         finally:
             await c.execute("DROP TABLE test_load_local")
-            c.close()
+            await c.aclose()
 
     @pytest.mark.trio
     async def test_load_file(self, set_me_up):
@@ -53,6 +50,7 @@ class TestLoadLocal(base.TrioMySQLTestCase):
         await set_me_up(self)
         """Test unbuffered load local infile with a valid file"""
         conn = self.connections[0]
+        await conn.connect()
         c = conn.cursor(cursors.SSCursor)
         await c.execute("CREATE TABLE test_load_local (a INTEGER, b INTEGER)")
         filename = os.path.join(os.path.dirname(os.path.realpath(__file__)),
@@ -66,9 +64,9 @@ class TestLoadLocal(base.TrioMySQLTestCase):
             await c.execute("SELECT COUNT(*) FROM test_load_local")
             self.assertEqual(22749, (await c.fetchone())[0])
         finally:
-            c.close()
-            conn.close()
-            conn.connect()
+            await c.aclose()
+            await conn.aclose()
+            await conn.connect()
             c = conn.cursor()
             await c.execute("DROP TABLE test_load_local")
 
@@ -95,5 +93,5 @@ class TestLoadLocal(base.TrioMySQLTestCase):
                     self.fail("%r not in %r" % (expected_message, w[-1].message))
         finally:
             await c.execute("DROP TABLE test_load_local")
-            c.close()
+            await c.aclose()
 

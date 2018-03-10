@@ -74,9 +74,10 @@ class TestOldIssues(base.TrioMySQLTestCase):
         kwargs = self.databases[0].copy()
         kwargs['db'] = "mysql"
         conn = trio_mysql.connect(**kwargs)
+        await conn.connect()
         c = conn.cursor()
         await c.execute("select * from user")
-        conn.close()
+        await conn.aclose()
 
     @pytest.mark.trio
     async def test_issue_8(self, set_me_up):
@@ -93,7 +94,7 @@ DEFAULT '0', `me` double DEFAULT NULL, `mo` double DEFAULT NULL, PRIMARY
 KEY (`station`,`dh`,`echeance`)) ENGINE=MyISAM DEFAULT CHARSET=latin1;""")
         try:
             self.assertEqual(0, await c.execute("SELECT * FROM test"))
-            c.execute("ALTER TABLE `test` ADD INDEX `idx_station` (`station`)")
+            await c.execute("ALTER TABLE `test` ADD INDEX `idx_station` (`station`)")
             self.assertEqual(0, await c.execute("SELECT * FROM test"))
         finally:
             await c.execute("drop table test")
@@ -194,17 +195,17 @@ class TestNewIssues(base.TrioMySQLTestCase):
     async def test_issue_34(self, set_me_up):
         await set_me_up(self)
         try:
-            trio_mysql.connect(host="localhost", port=1237, user="root")
+            c = trio_mysql.connect(host="localhost", port=1237, user="root")
+            await c.connect()
             self.fail()
         except trio_mysql.OperationalError as e:
             self.assertEqual(2003, e.args[0])
-        except Exception:
-            self.fail()
 
     @pytest.mark.trio
     async def test_issue_33(self, set_me_up):
         await set_me_up(self)
         conn = trio_mysql.connect(charset="utf8", **self.databases[0])
+        await conn.connect()
         await self.safe_create_table(conn, u'hei\xdfe',
                                u'create table hei\xdfe (name varchar(32))')
         c = conn.cursor()
@@ -230,6 +231,7 @@ class TestNewIssues(base.TrioMySQLTestCase):
         await set_me_up(self)
         # connection 0 is super user, connection 1 isn't
         conn = self.connections[1]
+        await conn.connect()
         c = conn.cursor()
         await c.execute("show processlist")
         kill_id = None
@@ -248,8 +250,8 @@ class TestNewIssues(base.TrioMySQLTestCase):
             self.fail()
         except Exception:
             pass
-        c.close()
-        conn.close()
+        await c.aclose()
+        await conn.aclose()
 
         # check the process list from the other connection
         try:
@@ -346,7 +348,7 @@ class TestGitHubIssues(base.TrioMySQLTestCase):
             await c.execute("insert into b values (%s, %s)", b)
 
             await c.execute("SELECT * FROM a inner join b on a.id = b.id")
-            r = await c.fetchall()[0]
+            r = (await c.fetchall())[0]
             self.assertEqual(r['id'], 1)
             self.assertEqual(r['value'], 11)
             self.assertEqual(r['b.value'], 22)
@@ -381,27 +383,29 @@ class TestGitHubIssues(base.TrioMySQLTestCase):
         await set_me_up(self)
         """ autocommit is not set after reconnecting with ping() """
         conn = trio_mysql.connect(charset="utf8", **self.databases[0])
+        await conn.connect()
         await conn.autocommit(False)
         c = conn.cursor()
         await c.execute("""select @@autocommit;""")
         self.assertFalse((await c.fetchone())[0])
-        conn.close()
+        await conn.aclose()
         await conn.ping()
         await c.execute("""select @@autocommit;""")
         self.assertFalse((await c.fetchone())[0])
-        conn.close()
+        await conn.aclose()
 
         # Ensure autocommit() is still working
         conn = trio_mysql.connect(charset="utf8", **self.databases[0])
+        await conn.connect()
         c = conn.cursor()
         await c.execute("""select @@autocommit;""")
         self.assertFalse((await c.fetchone())[0])
-        conn.close()
+        await conn.aclose()
         await conn.ping()
         await conn.autocommit(True)
         await c.execute("""select @@autocommit;""")
         self.assertTrue((await c.fetchone())[0])
-        conn.close()
+        await conn.aclose()
 
     @pytest.mark.trio
     async def test_issue_175(self, set_me_up):
@@ -426,6 +430,7 @@ class TestGitHubIssues(base.TrioMySQLTestCase):
         await set_me_up(self)
         """ Test iterable as query argument. """
         conn = trio_mysql.connect(charset="utf8", **self.databases[0])
+        await conn.connect()
         await self.safe_create_table(
             conn, "issue321",
             "create table issue321 (value_1 varchar(1), value_2 varchar(1))")
@@ -455,6 +460,7 @@ class TestGitHubIssues(base.TrioMySQLTestCase):
         await set_me_up(self)
         """ Test mixed unicode/binary arguments in executemany. """
         conn = trio_mysql.connect(charset="utf8", **self.databases[0])
+        await conn.connect()
         await self.safe_create_table(
             conn, "issue364",
             "create table issue364 (value_1 binary(3), value_2 varchar(3)) "
@@ -487,6 +493,7 @@ class TestGitHubIssues(base.TrioMySQLTestCase):
         await set_me_up(self)
         """ Test binary / geometry types. """
         conn = trio_mysql.connect(charset="utf8", **self.databases[0])
+        await conn.connect()
         await self.safe_create_table(
             conn, "issue363",
             "CREATE TABLE issue363 ( "
@@ -541,6 +548,7 @@ class TestGitHubIssues(base.TrioMySQLTestCase):
         await set_me_up(self)
         """ Test warning propagation """
         conn = trio_mysql.connect(charset="utf8", **self.databases[0])
+        await conn.connect()
 
         with warnings.catch_warnings():
             # Ignore all warnings other than trio_mysql generated ones
@@ -561,4 +569,4 @@ class TestGitHubIssues(base.TrioMySQLTestCase):
                 else:
                     self.fail("Should raise Warning")
                 finally:
-                    c.close()
+                    await c.aclose()

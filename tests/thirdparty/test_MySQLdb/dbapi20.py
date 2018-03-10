@@ -16,6 +16,7 @@ __author__ = 'Stuart Bishop <zen@shangri-la.dropbear.id.au>'
 
 import time
 import pytest
+from tests import base
 
 # $Log$
 # Revision 1.1.2.1  2006/02/25 03:44:32  adustman
@@ -63,7 +64,7 @@ import pytest
 # - Fix bugs in test_setoutputsize_basic and test_setinputsizes
 #
 
-class TestDatabaseAPI20:
+class TestDatabaseAPI20(base.TrioMySQLTestCase):
     ''' Test a database self.driver for DB API 2.0 compatibility.
         This implementation tests Gadfly, but the TestCase
         is structured so that other self.drivers can subclass this
@@ -118,7 +119,7 @@ class TestDatabaseAPI20:
             if any is necessary, such as deleting the test database.
             The default drops the tables that may be created.
         '''
-        con = self._connect()
+        con = await self._connect()
         try:
             cur = con.cursor()
             for ddl in (self.xddl1,self.xddl2):
@@ -130,21 +131,23 @@ class TestDatabaseAPI20:
                     # execute is busted.
                     pass
         finally:
-            con.close()
+            await con.aclose()
 
-    def _connect(self):
+    async def _connect(self):
         try:
-            return self.driver.connect(
+            res = self.driver.connect(
                 *self.connect_args,**self.connect_kw_args
                 )
+            await res.connect()
+            return res
         except AttributeError:
             self.fail("No connect method found in self.driver module")
 
     @pytest.mark.trio
     async def test_connect(self, set_me_up):
         await set_me_up(self)
-        con = self._connect()
-        con.close()
+        con = await self._connect()
+        await con.aclose()
 
     @pytest.mark.trio
     async def test_apilevel(self, set_me_up):
@@ -219,7 +222,7 @@ class TestDatabaseAPI20:
         # I figure this optional extension will be implemented by any
         # driver author who is using this test suite, so it is enabled
         # by default.
-        con = self._connect()
+        con = await self._connect()
         drv = self.driver
         self.assertTrue(con.Warning is drv.Warning)
         self.assertTrue(con.Error is drv.Error)
@@ -235,17 +238,17 @@ class TestDatabaseAPI20:
     @pytest.mark.trio
     async def test_commit(self, set_me_up):
         await set_me_up(self)
-        con = self._connect()
+        con = await self._connect()
         try:
             # Commit must work, even if it doesn't do anything
             await con.commit()
         finally:
-            con.close()
+            await con.aclose()
 
     @pytest.mark.trio
     async def test_rollback(self, set_me_up):
         await set_me_up(self)
-        con = self._connect()
+        con = await self._connect()
         # If rollback is defined, it should either work or throw
         # the documented exception
         if hasattr(con,'rollback'):
@@ -253,20 +256,21 @@ class TestDatabaseAPI20:
                 await con.rollback()
             except self.driver.NotSupportedError:
                 pass
+        await con.aclose()
 
     @pytest.mark.trio
     async def test_cursor(self, set_me_up):
         await set_me_up(self)
-        con = self._connect()
+        con = await self._connect()
         try:
             cur = con.cursor()
         finally:
-            con.close()
+            await con.aclose()
 
     @pytest.mark.trio
     async def test_cursor_isolation(self, set_me_up):
         await set_me_up(self)
-        con = self._connect()
+        con = await self._connect()
         try:
             # Make sure cursors created from the same connection have
             # the documented transaction isolation level
@@ -282,12 +286,12 @@ class TestDatabaseAPI20:
             self.assertEqual(len(booze[0]),1)
             self.assertEqual(booze[0][0],'Victoria Bitter')
         finally:
-            con.close()
+            await con.aclose()
 
     @pytest.mark.trio
     async def test_description(self, set_me_up):
         await set_me_up(self)
-        con = self._connect()
+        con = await self._connect()
         try:
             cur = con.cursor()
             await self.executeDDL1(cur)
@@ -317,12 +321,12 @@ class TestDatabaseAPI20:
                 'no-result statements (eg. DDL)'
                 )
         finally:
-            con.close()
+            await con.aclose()
 
     @pytest.mark.trio
     async def test_rowcount(self, set_me_up):
         await set_me_up(self)
-        con = self._connect()
+        con = await self._connect()
         try:
             cur = con.cursor()
             await self.executeDDL1(cur)
@@ -348,13 +352,13 @@ class TestDatabaseAPI20:
                 'no-result statements'
                 )
         finally:
-            con.close()
+            await con.aclose()
 
     lower_func = 'lower'
     @pytest.mark.trio
     async def test_callproc(self, set_me_up):
         await set_me_up(self)
-        con = self._connect()
+        con = await self._connect()
         try:
             cur = con.cursor()
             if self.lower_func and hasattr(cur,'callproc'):
@@ -370,16 +374,16 @@ class TestDatabaseAPI20:
                     'callproc produced invalid results'
                     )
         finally:
-            con.close()
+            await con.aclose()
 
     @pytest.mark.trio
     async def test_close(self, set_me_up):
         await set_me_up(self)
-        con = self._connect()
+        con = await self._connect()
         try:
             cur = con.cursor()
         finally:
-            con.close()
+            await con.aclose()
 
         # cursor.execute should raise an Error if called after connection
         # closed
@@ -388,20 +392,23 @@ class TestDatabaseAPI20:
 
         # connection.commit should raise an Error if called after connection'
         # closed.'
-        self.assertRaises(self.driver.Error,con.commit)
+        with pytest.raises(self.driver.Error):
+            await con.commit()
 
         # connection.close should raise an Error if called more than once
-        self.assertRaises(self.driver.Error,con.close)
+        # except that Trio doesn't do that, closing should be idempotent
+        #with pytest.raises(self.driver.Error):
+        #    await con.aclose()
 
     @pytest.mark.trio
     async def test_execute(self, set_me_up):
         await set_me_up(self)
-        con = self._connect()
+        con = await self._connect()
         try:
             cur = con.cursor()
             await self._paraminsert(cur)
         finally:
-            con.close()
+            await con.aclose()
 
     async def _paraminsert(self,cur):
         await self.executeDDL1(cur)
@@ -456,7 +463,7 @@ class TestDatabaseAPI20:
     @pytest.mark.trio
     async def test_executemany(self, set_me_up):
         await set_me_up(self)
-        con = self._connect()
+        con = await self._connect()
         try:
             cur = con.cursor()
             await self.executeDDL1(cur)
@@ -505,12 +512,12 @@ class TestDatabaseAPI20:
             self.assertEqual(beers[0],"Boag's",'incorrect data retrieved')
             self.assertEqual(beers[1],"Cooper's",'incorrect data retrieved')
         finally:
-            con.close()
+            await con.aclose()
 
     @pytest.mark.trio
     async def test_fetchone(self, set_me_up):
         await set_me_up(self)
-        con = self._connect()
+        con = await self._connect()
         try:
             cur = con.cursor()
 
@@ -553,7 +560,7 @@ class TestDatabaseAPI20:
                 )
             self.assertTrue(cur.rowcount in (-1,1))
         finally:
-            con.close()
+            await con.aclose()
 
     samples = [
         'Carlton Cold',
@@ -577,7 +584,7 @@ class TestDatabaseAPI20:
     @pytest.mark.trio
     async def test_fetchmany(self, set_me_up):
         await set_me_up(self)
-        con = self._connect()
+        con = await self._connect()
         try:
             cur = con.cursor()
 
@@ -657,12 +664,12 @@ class TestDatabaseAPI20:
             self.assertTrue(cur.rowcount in (-1,0))
 
         finally:
-            con.close()
+            await con.aclose()
 
     @pytest.mark.trio
     async def test_fetchall(self, set_me_up):
         await set_me_up(self)
-        con = self._connect()
+        con = await self._connect()
         try:
             cur = con.cursor()
             # cursor.fetchall should raise an Error if called
@@ -710,12 +717,12 @@ class TestDatabaseAPI20:
                 )
 
         finally:
-            con.close()
+            await con.aclose()
 
     @pytest.mark.trio
     async def test_mixedfetch(self, set_me_up):
         await set_me_up(self)
-        con = self._connect()
+        con = await self._connect()
         try:
             cur = con.cursor()
             await self.executeDDL1(cur)
@@ -745,7 +752,7 @@ class TestDatabaseAPI20:
                     'incorrect data retrieved or inserted'
                     )
         finally:
-            con.close()
+            await con.aclose()
 
     def help_nextset_setUp(self,cur):
         ''' Should create a procedure called deleteme
@@ -770,7 +777,7 @@ class TestDatabaseAPI20:
     @pytest.mark.trio
     async def test_nextset(self, set_me_up):
         await set_me_up(self)
-        con = self._connect()
+        con = await self._connect()
         try:
             cur = con.cursor()
             if not hasattr(cur,'nextset'):
@@ -796,7 +803,7 @@ class TestDatabaseAPI20:
                 self.help_nextset_tearDown(cur)
 
         finally:
-            con.close()
+            await con.aclose()
 
     @pytest.mark.trio
     async def test_nextset(self, set_me_up):
@@ -807,38 +814,38 @@ class TestDatabaseAPI20:
     async def test_arraysize(self, set_me_up):
         await set_me_up(self)
         # Not much here - rest of the tests for this are in test_fetchmany
-        con = self._connect()
+        con = await self._connect()
         try:
             cur = con.cursor()
             self.assertTrue(hasattr(cur,'arraysize'),
                 'cursor.arraysize must be defined'
                 )
         finally:
-            con.close()
+            await con.aclose()
 
     @pytest.mark.trio
     async def test_setinputsizes(self, set_me_up):
         await set_me_up(self)
-        con = self._connect()
+        con = await self._connect()
         try:
             cur = con.cursor()
             cur.setinputsizes( (25,) )
             await self._paraminsert(cur) # Make sure cursor still works
         finally:
-            con.close()
+            await con.aclose()
 
     @pytest.mark.trio
     async def test_setoutputsize_basic(self, set_me_up):
         await set_me_up(self)
         # Basic test is to make sure setoutputsize doesn't blow up
-        con = self._connect()
+        con = await self._connect()
         try:
             cur = con.cursor()
             cur.setoutputsize(1000)
             cur.setoutputsize(2000,0)
             await self._paraminsert(cur) # Make sure the cursor still works
         finally:
-            con.close()
+            await con.aclose()
 
     @pytest.mark.trio
     async def test_setoutputsize(self, set_me_up):
@@ -849,7 +856,7 @@ class TestDatabaseAPI20:
     @pytest.mark.trio
     async def test_None(self, set_me_up):
         await set_me_up(self)
-        con = self._connect()
+        con = await self._connect()
         try:
             cur = con.cursor()
             await self.executeDDL1(cur)
@@ -860,7 +867,7 @@ class TestDatabaseAPI20:
             self.assertEqual(len(r[0]),1)
             self.assertEqual(r[0][0],None,'NULL value not returned as None')
         finally:
-            con.close()
+            await con.aclose()
 
     @pytest.mark.trio
     async def test_Date(self, set_me_up):
