@@ -172,7 +172,7 @@ class TestConversion(base.TrioMySQLTestCase):
                 (1, dt)
             )
             await c.execute("select ts from test_datetime")
-            self.assertEqual((dt,), c.fetchone())
+            self.assertEqual((dt,), await c.fetchone())
         finally:
             await c.execute("drop table test_datetime")
 

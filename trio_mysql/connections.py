@@ -957,7 +957,7 @@ class Connection(object):
         try:
             if sock is None:
                 if self.unix_socket and self.host in ('localhost', '127.0.0.1'):
-                    sock = await trio.socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+                    sock = trio.socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
                     await sock.connect(self.unix_socket)
                     self.host_info = "Localhost via UNIX socket"
                     if DEBUG: print('connected using unix_socket')
@@ -972,6 +972,8 @@ class Connection(object):
                     if DEBUG: print('connected using socket')
                     sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
                 sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+            if not isinstance(sock, trio.SocketStream):
+                sock = trio.SocketStream(sock)
             self._sock = sock
             self._next_seq_id = 0
 
@@ -1065,27 +1067,29 @@ class Connection(object):
         return packet
 
     async def _read_bytes(self, num_bytes):
-        while True:
+        rdata = b""
+        while self._sock is not None and len(rdata) < num_bytes:
             try:
-                data = await self._sock.receive_some(num_bytes)
-                break
-            except (IOError, OSError) as e:
-                if e.errno == errno.EINTR:
-                    continue
+                data = await self._sock.receive_some(num_bytes-len(rdata))
+            except trio.BrokenStreamError as e:
                 self._force_close()
                 raise err.OperationalError(
                     CR.CR_SERVER_LOST,
                     "Lost connection to MySQL server during query (%s)" % (e,))
-        if len(data) < num_bytes:
+            else:
+                if data == b"":
+                    break
+                rdata += data
+        if len(rdata) < num_bytes:
             self._force_close()
             raise err.OperationalError(
                 CR.CR_SERVER_LOST, "Lost connection to MySQL server during query")
-        return data
+        return rdata
 
     async def _write_bytes(self, data):
         try:
             await self._sock.send_all(data)
-        except IOError as e:
+        except trio.BrokenStreamError as e:
             self._force_close()
             raise err.OperationalError(
                 CR.CR_SERVER_GONE_ERROR,
@@ -1593,8 +1597,8 @@ class LoadLocalFile(object):
                     if not chunk:
                         break
                     await conn.write_packet(chunk)
-        except IOError:
-            raise err.OperationalError(1017, "Can't find file '{0}'".format(self.filename))
+        except EnvironmentError as e:
+            raise err.OperationalError(1017, "Can't read file '{0}': {1}".format(self.filename, e.errno))
         finally:
             # send the empty packet to signify we are done sending data
             await conn.write_packet(b'')

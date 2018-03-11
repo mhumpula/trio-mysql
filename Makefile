@@ -14,7 +14,7 @@ PYTHON ?= python3
 export PYTHONPATH=$(shell pwd)
 
 PYTEST ?= ${PYTHON} $(shell which pytest-3)
-TEST_OPTIONS ?= -xvvv --full-trace
+TEST_OPTIONS ?= --cov=trio_mysql -xvvv --full-trace
 PYLINT_RC ?= .pylintrc
 
 BUILD_DIR ?= build

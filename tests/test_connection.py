@@ -19,21 +19,21 @@ class TempUser:
 
     async def __aenter__(self):
         create = "CREATE USER " + self._user
-        if password is not None:
+        if self._password is not None:
             create += " IDENTIFIED BY '%s'" % self._password
-        elif auth is not None:
+        elif self._auth is not None:
             create += " IDENTIFIED WITH %s" % self._auth
-            if authdata is not None:
+            if self._authdata is not None:
                 create += " AS '%s'" % self._authdata
 
         try:
-            await c.execute(create)
+            await self._c.execute(create)
             self._created = True
         except trio_mysql.err.InternalError:
             # already exists - TODO need to check the same plugin applies
             self._created = False
         try:
-            await c.execute("GRANT SELECT ON %s.* TO %s" % (db, user))
+            await self._c.execute("GRANT SELECT ON %s.* TO %s" % (self._db, self._user))
             self._grant = True
         except trio_mysql.err.InternalError:
             self._grant = False
@@ -373,7 +373,7 @@ class TestAuthentication(base.TrioMySQLTestCase):
             raise base.SkipTest('Old passwords don\'t authenticate in 5.6')
         db = self.db.copy()
         db['password'] = "crummy p\tassword"
-        with self.connections[0] as c:
+        async with self.connections[0] as c:
             # deprecated in 5.6
             if sys.version_info[0:2] >= (3,2) and self.mysql_server_is(self.connections[0], (5, 6, 0)):
                 with self.assertWarns(trio_mysql.err.Warning) as cm:
@@ -414,13 +414,13 @@ class TestAuthentication(base.TrioMySQLTestCase):
     async def testAuthSHA256(self, set_me_up):
         await set_me_up(self)
         c = self.connections[0].cursor()
-        async with TempUser(c, 'trio_mysql_sha256@localhost',
+        async with TempUser(c, 'test_sha256@localhost',
                       self.databases[0]['db'], 'sha256_password') as u:
             if self.mysql_server_is(self.connections[0], (5, 7, 0)):
-                await c.execute("SET PASSWORD FOR 'trio_mysql_sha256'@'localhost' ='Sh@256Pa33'")
+                await c.execute("SET PASSWORD FOR 'test_sha256'@'localhost' ='Sh@256Pa33'")
             else:
                 await c.execute('SET old_passwords = 2')
-                await c.execute("SET PASSWORD FOR 'trio_mysql_sha256'@'localhost' = PASSWORD('Sh@256Pa33')")
+                await c.execute("SET PASSWORD FOR 'test_sha256'@'localhost' = PASSWORD('Sh@256Pa33')")
             db = self.db.copy()
             db['password'] = "Sh@256Pa33"
             # not implemented yet so thows error
@@ -571,6 +571,7 @@ class TestConnection(base.TrioMySQLTestCase):
             try:
                 sock = trio.socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
                 await sock.connect(d['unix_socket'])
+                sock = trio.SocketStream(sock)
             except KeyError:
                 sock = await trio.open_tcp_stream \
                                 (d.get('host', 'localhost'), d.get('port', 3306))
