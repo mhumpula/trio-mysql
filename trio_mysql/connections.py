@@ -1071,7 +1071,7 @@ class Connection(object):
         while self._sock is not None and len(rdata) < num_bytes:
             try:
                 data = await self._sock.receive_some(num_bytes-len(rdata))
-            except (IOError, OSError) as e:
+            except EnvironmentError as e:
                 if e.errno == errno.EINTR:
                     continue
                 self._force_close()
@@ -1091,7 +1091,7 @@ class Connection(object):
     async def _write_bytes(self, data):
         try:
             await self._sock.send_all(data)
-        except IOError as e:
+        except EnvironmentError as e:
             self._force_close()
             raise err.OperationalError(
                 CR.CR_SERVER_GONE_ERROR,
@@ -1599,8 +1599,8 @@ class LoadLocalFile(object):
                     if not chunk:
                         break
                     await conn.write_packet(chunk)
-        except IOError:
-            raise err.OperationalError(1017, "Can't find file '{0}'".format(self.filename))
+        except EnvironmentError as e:
+            raise err.OperationalError(1017, "Can't read file '{0}': {1}".format(self.filename, e.errno))
         finally:
             # send the empty packet to signify we are done sending data
             await conn.write_packet(b'')

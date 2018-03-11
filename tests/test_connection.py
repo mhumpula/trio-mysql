@@ -33,7 +33,7 @@ class TempUser:
             # already exists - TODO need to check the same plugin applies
             self._created = False
         try:
-            await self._c.execute("GRANT SELECT ON %s.* TO %s" % (db, user))
+            await self._c.execute("GRANT SELECT ON %s.* TO %s" % (self._db, self._user))
             self._grant = True
         except trio_mysql.err.InternalError:
             self._grant = False
