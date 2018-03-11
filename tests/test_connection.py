@@ -373,7 +373,7 @@ class TestAuthentication(base.TrioMySQLTestCase):
             raise base.SkipTest('Old passwords don\'t authenticate in 5.6')
         db = self.db.copy()
         db['password'] = "crummy p\tassword"
-        with self.connections[0] as c:
+        async with self.connections[0] as c:
             # deprecated in 5.6
             if sys.version_info[0:2] >= (3,2) and self.mysql_server_is(self.connections[0], (5, 6, 0)):
                 with self.assertWarns(trio_mysql.err.Warning) as cm:
