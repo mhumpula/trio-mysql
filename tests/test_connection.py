@@ -414,13 +414,13 @@ class TestAuthentication(base.TrioMySQLTestCase):
     async def testAuthSHA256(self, set_me_up):
         await set_me_up(self)
         c = self.connections[0].cursor()
-        async with TempUser(c, 'trio_mysql_sha256@localhost',
+        async with TempUser(c, 'test_sha256@localhost',
                       self.databases[0]['db'], 'sha256_password') as u:
             if self.mysql_server_is(self.connections[0], (5, 7, 0)):
-                await c.execute("SET PASSWORD FOR 'trio_mysql_sha256'@'localhost' ='Sh@256Pa33'")
+                await c.execute("SET PASSWORD FOR 'test_sha256'@'localhost' ='Sh@256Pa33'")
             else:
                 await c.execute('SET old_passwords = 2')
-                await c.execute("SET PASSWORD FOR 'trio_mysql_sha256'@'localhost' = PASSWORD('Sh@256Pa33')")
+                await c.execute("SET PASSWORD FOR 'test_sha256'@'localhost' = PASSWORD('Sh@256Pa33')")
             db = self.db.copy()
             db['password'] = "Sh@256Pa33"
             # not implemented yet so thows error

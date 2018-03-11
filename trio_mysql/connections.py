@@ -1071,9 +1071,7 @@ class Connection(object):
         while self._sock is not None and len(rdata) < num_bytes:
             try:
                 data = await self._sock.receive_some(num_bytes-len(rdata))
-            except EnvironmentError as e:
-                if e.errno == errno.EINTR:
-                    continue
+            except trio.BrokenStreamError as e:
                 self._force_close()
                 raise err.OperationalError(
                     CR.CR_SERVER_LOST,
@@ -1091,7 +1089,7 @@ class Connection(object):
     async def _write_bytes(self, data):
         try:
             await self._sock.send_all(data)
-        except EnvironmentError as e:
+        except trio.BrokenStreamError as e:
             self._force_close()
             raise err.OperationalError(
                 CR.CR_SERVER_GONE_ERROR,
