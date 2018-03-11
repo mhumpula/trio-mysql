@@ -14,9 +14,10 @@ matrix:
 
     - addons:
         mariadb: 10.1
-      python: "pypy"
+      python: "3.6"
+    # TODO: pyp, as soon as it supports 3.6
 
-    - python: 3.6
+    - python: "3.6"
       env: CHECK_DOCS=1
 
 # not done: no extensive reformatting of Upstream, please
