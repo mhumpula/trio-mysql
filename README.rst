@@ -5,8 +5,8 @@
 .. image:: https://travis-ci.org/python-trio/trio-mysql.svg?branch=master
     :target: https://travis-ci.org/python-trio/trio-mysql
 
-.. image:: https://coveralls.io/repos/python-trio/trio-mysql/badge.svg?branch=master&service=github
-    :target: https://coveralls.io/github/python-trio/trio-mysql?branch=master
+.. image:: https://codecov.io/gh/python-trio/trio-mysql/branch/master/graph/badge.svg
+    :target: https://codecov.io/gh/python-trio/trio-mysql
 
 .. image:: https://img.shields.io/badge/license-MIT-blue.svg
     :target: https://github.com/python-trio/trio-mysql/blob/master/LICENSE

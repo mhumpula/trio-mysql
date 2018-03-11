@@ -1,3 +1,9 @@
+trio-mysql (0.8.0.1-3) unstable; urgency=medium
+
+  * Fixes for Travis runs
+
+ -- Matthias Urlichs <matthias@urlichs.de>  Sun, 11 Mar 2018 10:50:17 +0100
+
 trio-mysql (0.8.0-2) smurf; urgency=medium
 
   * Debian: skip tests

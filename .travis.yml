@@ -29,7 +29,7 @@ matrix:
 # really only need libaio1 for DB builds however libaio-dev is whitelisted for container builds and liaio1 isn't
 install:
     - export PASSWORD=travis;
-    - pip install -U coveralls pytest pytest-trio coverage
+    - pip install -U pytest pytest-trio pytest-cov coverage
 
 before_script:
     - ./.travis/initializedb.sh
@@ -41,13 +41,11 @@ before_script:
     - mysql -e 'select VERSION()'
     - python -VV
     - rm -f ~/.my.cnf # set in .travis.initialize.db.sh for the above commands - we should be using database.json however
-    - export COVERALLS_PARALLEL=true
 
 script:
   - .travis/run.sh
 
 after_success:
-    - coveralls
     - cat /tmp/mysql.err
 
 after_failure:

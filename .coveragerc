@@ -1,7 +1,6 @@
 [run]
 branch = True
-source =
-    trio_mysql
+source = trio_mysql
 omit = tests/*
        tests/thirdparty/test_MySQLdb/*
 
