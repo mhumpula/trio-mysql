@@ -27,13 +27,13 @@ class TempUser:
                 create += " AS '%s'" % self._authdata
 
         try:
-            await c.execute(create)
+            await self._c.execute(create)
             self._created = True
         except trio_mysql.err.InternalError:
             # already exists - TODO need to check the same plugin applies
             self._created = False
         try:
-            await c.execute("GRANT SELECT ON %s.* TO %s" % (db, user))
+            await self._c.execute("GRANT SELECT ON %s.* TO %s" % (db, user))
             self._grant = True
         except trio_mysql.err.InternalError:
             self._grant = False
@@ -571,6 +571,7 @@ class TestConnection(base.TrioMySQLTestCase):
             try:
                 sock = trio.socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
                 await sock.connect(d['unix_socket'])
+                sock = trio.SocketStream(sock)
             except KeyError:
                 sock = await trio.open_tcp_stream \
                                 (d.get('host', 'localhost'), d.get('port', 3306))
@@ -584,7 +585,7 @@ class TestConnection(base.TrioMySQLTestCase):
             self.assertFalse(c.open)
             await c.connect(sock)
             await c.aclose()
-            sock.close()
+            await sock.aclose()
 
     @pytest.mark.skipif(sys.version_info[0:2] < (3,2), reason="required py-3.2")
     @pytest.mark.trio
