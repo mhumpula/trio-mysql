@@ -19,11 +19,11 @@ class TempUser:
 
     async def __aenter__(self):
         create = "CREATE USER " + self._user
-        if password is not None:
+        if self._password is not None:
             create += " IDENTIFIED BY '%s'" % self._password
-        elif auth is not None:
+        elif self._auth is not None:
             create += " IDENTIFIED WITH %s" % self._auth
-            if authdata is not None:
+            if self._authdata is not None:
                 create += " AS '%s'" % self._authdata
 
         try:
@@ -584,7 +584,7 @@ class TestConnection(base.TrioMySQLTestCase):
             self.assertFalse(c.open)
             await c.connect(sock)
             await c.aclose()
-            await sock.aclose()
+            sock.close()
 
     @pytest.mark.skipif(sys.version_info[0:2] < (3,2), reason="required py-3.2")
     @pytest.mark.trio
