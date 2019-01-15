@@ -26,7 +26,7 @@ class TestConversion(base.TrioMySQLTestCase):
         try:
             # insert values
 
-            v = (True, -3, 123456789012, 5.7, "hello'\" world", u"Espa\xc3\xb1ol", "binary\x00data".encode(conn.charset), datetime.date(1988,2,2), datetime.datetime(2014, 5, 15, 7, 45, 57), datetime.timedelta(5,6), datetime.time(16,32), time.localtime())
+            v = (True, -3, 123456789012, 5.7, "hello'\" world", u"Espa\xc3\xb1ol", "binary\x00data".encode(conn.encoding), datetime.date(1988,2,2), datetime.datetime(2014, 5, 15, 7, 45, 57), datetime.timedelta(5,6), datetime.time(16,32), time.localtime())
             await c.execute("insert into test_datatypes (b,i,l,f,s,u,bb,d,dt,td,t,st) values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)", v)
             await c.execute("select b,i,l,f,s,u,bb,d,dt,td,t,st from test_datatypes")
             r = await c.fetchone()
@@ -109,9 +109,9 @@ class TestConversion(base.TrioMySQLTestCase):
             conn, "test_binary", "create table test_binary (b binary(255))")
 
         async with conn.cursor() as c:
-            await c.execute("insert into test_binary (b) values (%s)", (data,))
+            await c.execute("insert into test_binary (b) values (_binary %s)", (data,))
             await c.execute("select b from test_binary")
-            self.assertEqual(data, (await c.fetchone())[0])
+            self.assertEqual(data, c.fetchone()[0])
 
     @pytest.mark.trio
     async def test_blob(self, set_me_up):
@@ -123,9 +123,9 @@ class TestConversion(base.TrioMySQLTestCase):
             conn, "test_blob", "create table test_blob (b blob)")
 
         async with conn.cursor() as c:
-            await c.execute("insert into test_blob (b) values (%s)", (data,))
+            await c.execute("insert into test_blob (b) values (_binary %s)", (data,))
             await c.execute("select b from test_blob")
-            self.assertEqual(data, (await c.fetchone())[0])
+            self.assertEqual(data, c.fetchone()[0])
 
     @pytest.mark.trio
     async def test_untyped(self, set_me_up):

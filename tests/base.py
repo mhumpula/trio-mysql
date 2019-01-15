@@ -52,16 +52,31 @@ class TrioMySQLTestCase(FakeUnittestcase):
         )
         return server_version_tuple >= version_tuple
 
-    async def setUp(self):
-        self.connections = []
-        for params in self.databases:
-            conn = trio_mysql.connect(**params)
-            await conn.connect()
-            self.connections.append(conn)
+    _connections = None
+
+    @property
+    async def connections(self):
+        if self._connections is None:
+            self._connections = []
+            for params in self.databases:
+                conn = trio_mysql.connect(**params)
+                await conn.connect()
+                self._connections.append(conn)
+        return self._connections
+
+    async def connect(self, **params):
+        p = self.databases[0].copy()
+        p.update(params)
+        conn = trio_mysql.connect(**p)
+        await conn.connect()
+        self._connections.append(conn)
 
     async def tearDown(self):
-        for connection in self.connections:
-            await connection.aclose()
+        if self._connections:
+            for connection in self._connections:
+                if connection.open:
+                    await connection.aclose()
+            self._connections = None
 
     async def safe_create_table(self, connection, tablename, ddl, cleanup=True):
         """create a table.

@@ -13,8 +13,8 @@ class DatabaseTest(base.TrioMySQLTestCase):
 
     db_module = None
     connect_args = ()
-    connect_kwargs = dict(use_unicode=True, charset="utf8", binary_prefix=True)
-    create_table_extra = "ENGINE=INNODB CHARACTER SET UTF8"
+    connect_kwargs = dict(use_unicode=True, charset="utf8mb4", binary_prefix=True)
+    create_table_extra = "ENGINE=INNODB CHARACTER SET UTF8MB4"
     rows = 10
     debug = False
 

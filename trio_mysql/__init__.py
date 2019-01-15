@@ -35,7 +35,11 @@ from .times import (
     DateFromTicks, TimeFromTicks, TimestampFromTicks)
 
 
-VERSION = (0, 8, 0, None)
+VERSION = (0, 9, 2, None)
+if VERSION[3] is not None:
+    VERSION_STRING = "%d.%d.%d_%s" % VERSION
+else:
+    VERSION_STRING = "%d.%d.%d" % VERSION[:3]
 threadsafety = 1
 apilevel = "2.0"
 paramstyle = "pyformat"

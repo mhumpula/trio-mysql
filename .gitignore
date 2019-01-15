@@ -5,7 +5,14 @@ __pycache__
 /.cache
 /dist
 /trio_mysql.egg-info
+||||||| merged common ancestors
+.coverage
+/dist
+/PyMySQL.egg-info
 /.tox
+/.venv
+/.vscode
+/PyMySQL.egg-info
 /build
 /tests/databases.json
 
@@ -15,3 +22,10 @@ docs/build
 *.swp
 *~
 /.pybuild/
+||||||| merged common ancestors
+/pymysql/tests/databases.json
+
+/.idea
+/dist
+/docs/build
+Pipfile.lock

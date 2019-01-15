@@ -1,5 +1,5 @@
 .. image:: https://readthedocs.org/projects/trio_mysql/badge/?version=latest
-    :target: http://trio_mysql.readthedocs.io/en/latest/?badge=latest
+    :target: http://trio_mysql.readthedocs.io/
     :alt: Documentation Status
 
 .. image:: https://travis-ci.org/python-trio/trio-mysql.svg?branch=master
@@ -28,6 +28,7 @@ unavoidable.
 
 .. _`PEP 249`: https://www.python.org/dev/peps/pep-0249/
 
+
 Requirements
 -------------
 
@@ -38,19 +39,19 @@ Requirements
 
 * MySQL Server -- one of the following:
 
-  - MySQL_ >= 4.1  (tested with only 5.5~)
-  - MariaDB_ >= 5.1
+  - MySQL_ >= 5.5
+  - MariaDB_ >= 5.5
 
-.. _CPython: http://www.python.org/
-.. _PyPy: http://pypy.org/
-.. _MySQL: http://www.mysql.com/
+.. _CPython: https://www.python.org/
+.. _PyPy: https://pypy.org/
+.. _MySQL: https://www.mysql.com/
 .. _MariaDB: https://mariadb.org/
 
 
 Installation
 ------------
 
-The last stable release is available on PyPI and can be installed with ``pip``::
+Package is uploaded on `PyPI <https://pypi.org/project/PyMySQL>`_.
 
     $ pip install trio_mysql
 
@@ -61,7 +62,7 @@ Documentation
 Documentation is available online: http://trio_mysql.readthedocs.io/
 
 For support, please refer to the `StackOverflow
-<http://stackoverflow.com/questions/tagged/trio_mysql>`_.
+<https://stackoverflow.com/questions/tagged/trio_mysql>`_.
 
 Example
 -------
@@ -125,12 +126,15 @@ This example will print:
 Resources
 ---------
 
-DB-API 2.0: http://www.python.org/dev/peps/pep-0249
+* DB-API 2.0: http://www.python.org/dev/peps/pep-0249
 
-MySQL Reference Manuals: http://dev.mysql.com/doc/
+* MySQL Reference Manuals: http://dev.mysql.com/doc/
 
-MySQL client/server protocol:
-http://dev.mysql.com/doc/internals/en/client-server-protocol.html
+* MySQL client/server protocol:
+  http://dev.mysql.com/doc/internals/en/client-server-protocol.html
+
+* "Connector" channel in MySQL Community Slack:
+  http://lefred.be/mysql-community-on-slack/
 
 Trio chat: https://gitter.im/python-trio/general
 
