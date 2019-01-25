@@ -24,6 +24,7 @@ THE SOFTWARE.
 """
 import sys
 
+from ._version import __version__
 from .constants import FIELD_TYPE
 from .converters import escape_dict, escape_sequence, escape_string
 from .err import (
@@ -35,7 +36,7 @@ from .times import (
     DateFromTicks, TimeFromTicks, TimestampFromTicks)
 
 
-VERSION = (0, 8, 0, None)
+VERSION = tuple(__version__.split("."))
 threadsafety = 1
 apilevel = "2.0"
 paramstyle = "pyformat"

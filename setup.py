@@ -2,19 +2,16 @@
 import io
 from setuptools import setup, find_packages
 
-version_tuple = __import__('trio_mysql').VERSION
 
-if version_tuple[3] is not None:
-    version = "%d.%d.%d_%s" % version_tuple
-else:
-    version = "%d.%d.%d" % version_tuple[:3]
+exec(open("trio_mysql/_version.py", encoding="utf-8").read())
+
 
 with io.open('./README.rst', encoding='utf-8') as f:
     readme = f.read()
 
 setup(
     name="trio_mysql",
-    version=version,
+    version=__version__,
     url='https://github.com/python-trio/trio-mysql/',
     author='Matthias Urlichs',
     author_email='matthias@urlichs.de',
