@@ -5,13 +5,17 @@ from setuptools import setup, find_packages
 
 exec(open("trio_mysql/_version.py", encoding="utf-8").read())
 
+if VERSION[3] is not None:
+    version = "%d.%d.%d_%s" % VERSION
+else:
+    version = "%d.%d.%d" % VERSION[:3]
 
 with io.open('./README.rst', encoding='utf-8') as f:
     readme = f.read()
 
 setup(
     name="trio_mysql",
-    version=__version__,
+    version=version,
     url='https://github.com/python-trio/trio-mysql/',
     author='Matthias Urlichs',
     author_email='matthias@urlichs.de',
