@@ -24,6 +24,7 @@ THE SOFTWARE.
 """
 import sys
 
+from ._version import VERSION
 from .constants import FIELD_TYPE
 from .converters import escape_dict, escape_sequence, escape_string
 from .err import (
@@ -35,11 +36,6 @@ from .times import (
     DateFromTicks, TimeFromTicks, TimestampFromTicks)
 
 
-VERSION = (0, 9, 2, None)
-if VERSION[3] is not None:
-    VERSION_STRING = "%d.%d.%d_%s" % VERSION
-else:
-    VERSION_STRING = "%d.%d.%d" % VERSION[:3]
 threadsafety = 1
 apilevel = "2.0"
 paramstyle = "pyformat"
