@@ -53,7 +53,14 @@ Installation
 
 Package is uploaded on `PyPI <https://pypi.org/project/PyMySQL>`_.
 
-    $ pip install trio_mysql
+You can install it with pip::
+
+    $ python3 -m pip install trio_mysql
+
+To use "sha256_password" or "caching_sha2_password" for authenticate,
+you need to install additional dependency::
+
+   $ python3 -m pip install trio_mysql[rsa]
 
 
 Documentation
@@ -126,15 +133,15 @@ This example will print:
 Resources
 ---------
 
-* DB-API 2.0: http://www.python.org/dev/peps/pep-0249
+* DB-API 2.0: https://www.python.org/dev/peps/pep-0249/
 
-* MySQL Reference Manuals: http://dev.mysql.com/doc/
+* MySQL Reference Manuals: https://dev.mysql.com/doc/
 
 * MySQL client/server protocol:
-  http://dev.mysql.com/doc/internals/en/client-server-protocol.html
+  https://dev.mysql.com/doc/internals/en/client-server-protocol.html
 
 * "Connector" channel in MySQL Community Slack:
-  http://lefred.be/mysql-community-on-slack/
+  https://lefred.be/mysql-community-on-slack/
 
 Trio chat: https://gitter.im/python-trio/general
 

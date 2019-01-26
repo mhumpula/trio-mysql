@@ -14,7 +14,7 @@ class TestLoadLocal(base.TrioMySQLTestCase):
     async def test_no_file(self, set_me_up):
         await set_me_up(self)
         """Test load local infile when the file does not exist"""
-        conn = self.connections[0]
+        conn = await self.connect()
         c = conn.cursor()
         await c.execute("CREATE TABLE test_load_local (a INTEGER, b INTEGER)")
         try:
@@ -29,7 +29,7 @@ class TestLoadLocal(base.TrioMySQLTestCase):
     async def test_load_file(self, set_me_up):
         await set_me_up(self)
         """Test load local infile with a valid file"""
-        conn = self.connections[0]
+        conn = await self.connect()
         c = conn.cursor()
         await c.execute("CREATE TABLE test_load_local (a INTEGER, b INTEGER)")
         filename = os.path.join(os.path.dirname(os.path.realpath(__file__)),
@@ -49,8 +49,7 @@ class TestLoadLocal(base.TrioMySQLTestCase):
     async def test_unbuffered_load_file(self, set_me_up):
         await set_me_up(self)
         """Test unbuffered load local infile with a valid file"""
-        conn = self.connections[0]
-        await conn.connect()
+        conn = await self.connect()
         c = conn.cursor(cursors.SSCursor)
         await c.execute("CREATE TABLE test_load_local (a INTEGER, b INTEGER)")
         filename = os.path.join(os.path.dirname(os.path.realpath(__file__)),
@@ -74,7 +73,7 @@ class TestLoadLocal(base.TrioMySQLTestCase):
     async def test_load_warnings(self, set_me_up):
         await set_me_up(self)
         """Test load local infile produces the appropriate warnings"""
-        conn = self.connections[0]
+        conn = await self.connect()
         c = conn.cursor()
         await c.execute("CREATE TABLE test_load_local (a INTEGER, b INTEGER)")
         filename = os.path.join(os.path.dirname(os.path.realpath(__file__)),

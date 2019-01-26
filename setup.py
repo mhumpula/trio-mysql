@@ -4,10 +4,9 @@ from setuptools import setup, find_packages
 
 exec(open("trio_mysql/_version.py", encoding="utf-8").read())
 
-if VERSION[3] is not None:
-    version = "%d.%d.%d_%s" % VERSION
-else:
-    version = "%d.%d.%d" % VERSION[:3]
+version = '.'.join(str(x) for x in VERSION[:-1])
+if VERSION[-1] is not None:
+    version += "_" + VERSION[-1]
 
 with io.open('./README.rst', encoding='utf-8') as f:
     readme = f.read()
@@ -27,8 +26,10 @@ setup(
     license="MIT",
     install_requires=[
         "trio",
-        "cryptography",
     ],
+    extras_require={
+        "rsa": ["cryptography"],
+    },
     setup_requires=['pytest-runner'],
     tests_require=['pytest'],
     packages=find_packages(exclude=['tests*', 'trio_mysql.tests*']),

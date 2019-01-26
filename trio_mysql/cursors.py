@@ -128,7 +128,7 @@ class Cursor(object):
         if isinstance(args, (tuple, list)):
             return tuple(conn.literal(arg) for arg in args)
         elif isinstance(args, dict):
-            return dict((key, conn.literal(val)) for (key, val) in args.items())
+            return {key: conn.literal(val) for (key, val) in args.items()}
         else:
             # If it's not a dictionary let's try escaping it anyways.
             # Worst case it will throw a Value error

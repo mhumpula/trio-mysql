@@ -20,7 +20,7 @@ class TestConversion(base.TrioMySQLTestCase):
     async def test_datatypes(self, set_me_up):
         await set_me_up(self)
         """ test every data type """
-        conn = self.connections[0]
+        conn = await self.connect()
         c = conn.cursor()
         await c.execute("create table test_datatypes (b bit, i int, l bigint, f real, s varchar(32), u varchar(32), bb blob, d date, dt datetime, ts timestamp, td time, t time, st datetime)")
         try:
@@ -61,7 +61,7 @@ class TestConversion(base.TrioMySQLTestCase):
     async def test_dict(self, set_me_up):
         await set_me_up(self)
         """ test dict escaping """
-        conn = self.connections[0]
+        conn = await self.connect()
         c = conn.cursor()
         await c.execute("create table test_dict (a integer, b integer, c integer)")
         try:
@@ -74,7 +74,7 @@ class TestConversion(base.TrioMySQLTestCase):
     @pytest.mark.trio
     async def test_string(self, set_me_up):
         await set_me_up(self)
-        conn = self.connections[0]
+        conn = await self.connect()
         c = conn.cursor()
         await c.execute("create table test_dict (a text)")
         test_value = "I am a test string"
@@ -88,7 +88,7 @@ class TestConversion(base.TrioMySQLTestCase):
     @pytest.mark.trio
     async def test_integer(self, set_me_up):
         await set_me_up(self)
-        conn = self.connections[0]
+        conn = await self.connect()
         c = conn.cursor()
         await c.execute("create table test_dict (a integer)")
         test_value = 12345
@@ -104,7 +104,7 @@ class TestConversion(base.TrioMySQLTestCase):
         await set_me_up(self)
         """test binary data"""
         data = bytes(bytearray(range(255)))
-        conn = self.connections[0]
+        conn = await self.connect()
         await self.safe_create_table(
             conn, "test_binary", "create table test_binary (b binary(255))")
 
@@ -118,7 +118,7 @@ class TestConversion(base.TrioMySQLTestCase):
         await set_me_up(self)
         """test blob data"""
         data = bytes(bytearray(range(256)) * 4)
-        conn = self.connections[0]
+        conn = await self.connect()
         await self.safe_create_table(
             conn, "test_blob", "create table test_blob (b blob)")
 
@@ -131,7 +131,7 @@ class TestConversion(base.TrioMySQLTestCase):
     async def test_untyped(self, set_me_up):
         await set_me_up(self)
         """ test conversion of null, empty string """
-        conn = self.connections[0]
+        conn = await self.connect()
         c = conn.cursor()
         await c.execute("select null,''")
         self.assertEqual((None,u''), await c.fetchone())
@@ -142,7 +142,7 @@ class TestConversion(base.TrioMySQLTestCase):
     async def test_timedelta(self, set_me_up):
         await set_me_up(self)
         """ test timedelta conversion """
-        conn = self.connections[0]
+        conn = await self.connect()
         c = conn.cursor()
         await c.execute("select time('12:30'), time('23:12:59'), time('23:12:59.05100'), time('-12:30'), time('-23:12:59'), time('-23:12:59.05100'), time('-00:30')")
         self.assertEqual((datetime.timedelta(0, 45000),
@@ -160,7 +160,7 @@ class TestConversion(base.TrioMySQLTestCase):
         await set_me_up(self)
         """ test datetime conversion w microseconds"""
 
-        conn = self.connections[0]
+        conn = await self.connect()
         if not self.mysql_server_is(conn, (5, 6, 4)):
             raise base.SkipTest("target backend does not support microseconds")
         c = conn.cursor()
@@ -225,7 +225,7 @@ class TestCursor(base.TrioMySQLTestCase):
     #         ('max_updates', 3, 1, 11, 11, 0, 0),
     #         ('max_connections', 3, 1, 11, 11, 0, 0),
     #         ('max_user_connections', 3, 1, 11, 11, 0, 0))
-    #    conn = self.connections[0]
+    #    conn = await self.connect()
     #    c = conn.cursor()
     #    await c.execute("select * from mysql.user")
     #
@@ -235,7 +235,7 @@ class TestCursor(base.TrioMySQLTestCase):
     async def test_fetch_no_result(self, set_me_up):
         await set_me_up(self)
         """ test a fetchone() with no rows """
-        conn = self.connections[0]
+        conn = await self.connect()
         c = conn.cursor()
         await c.execute("create table test_nr (b varchar(32))")
         try:
@@ -249,7 +249,7 @@ class TestCursor(base.TrioMySQLTestCase):
     async def test_aggregates(self, set_me_up):
         await set_me_up(self)
         """ test aggregate functions """
-        conn = self.connections[0]
+        conn = await self.connect()
         c = conn.cursor()
         try:
             await c.execute('create table test_aggregates (i integer)')
@@ -265,7 +265,7 @@ class TestCursor(base.TrioMySQLTestCase):
     async def test_single_tuple(self, set_me_up):
         await set_me_up(self)
         """ test a single tuple """
-        conn = self.connections[0]
+        conn = await self.connect()
         c = conn.cursor()
         await self.safe_create_table(
             conn, 'mystuff',
@@ -313,7 +313,7 @@ class TestBulkInserts(base.TrioMySQLTestCase):
 
     async def setUp(self):
         await super().setUp()
-        self.conn = conn = self.connections[0]
+        self.conn = conn = await self.connect()
         c = conn.cursor(self.cursor_type)
 
         # create a table ane some data to query
@@ -329,7 +329,8 @@ PRIMARY KEY (id)
 """)
 
     async def _verify_records(self, data):
-        conn = self.connections[0]
+    def _verify_records(self, data):
+        conn = await self.connect()
         cursor = conn.cursor()
         await cursor.execute("SELECT id, name, age, height from bulkinsert")
         result = await cursor.fetchall()
@@ -338,7 +339,7 @@ PRIMARY KEY (id)
     @pytest.mark.trio
     async def test_bulk_insert(self, set_me_up):
         await set_me_up(self)
-        conn = self.connections[0]
+        conn = await self.connect()
         cursor = conn.cursor()
 
         data = [(0, "bob", 21, 123), (1, "jim", 56, 45), (2, "fred", 100, 180)]
@@ -354,7 +355,7 @@ PRIMARY KEY (id)
     @pytest.mark.trio
     async def test_bulk_insert_multiline_statement(self, set_me_up):
         await set_me_up(self)
-        conn = self.connections[0]
+        conn = await self.connect()
         cursor = conn.cursor()
         data = [(0, "bob", 21, 123), (1, "jim", 56, 45), (2, "fred", 100, 180)]
         await cursor.executemany("""insert
@@ -380,7 +381,7 @@ values (0,
     @pytest.mark.trio
     async def test_bulk_insert_single_record(self, set_me_up):
         await set_me_up(self)
-        conn = self.connections[0]
+        conn = await self.connect()
         cursor = conn.cursor()
         data = [(0, "bob", 21, 123)]
         await cursor.executemany("insert into bulkinsert (id, name, age, height) "
@@ -392,7 +393,7 @@ values (0,
     async def test_issue_288(self, set_me_up):
         await set_me_up(self)
         """executemany should work with "insert ... on update" """
-        conn = self.connections[0]
+        conn = await self.connect()
         cursor = conn.cursor()
         data = [(0, "bob", 21, 123), (1, "jim", 56, 45), (2, "fred", 100, 180)]
         await cursor.executemany("""insert
@@ -420,7 +421,7 @@ age = values(age)"""))
     @pytest.mark.trio
     async def test_warnings(self, set_me_up):
         await set_me_up(self)
-        con = self.connections[0]
+        con = await self.connect()
         cur = con.cursor()
         with warnings.catch_warnings(record=True) as ws:
             warnings.simplefilter("always")
