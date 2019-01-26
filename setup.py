@@ -2,12 +2,13 @@
 import io
 from setuptools import setup, find_packages
 
-version_tuple = __import__('trio_mysql').VERSION
 
-if version_tuple[3] is not None:
-    version = "%d.%d.%d_%s" % version_tuple
+exec(open("trio_mysql/_version.py", encoding="utf-8").read())
+
+if VERSION[3] is not None:
+    version = "%d.%d.%d_%s" % VERSION
 else:
-    version = "%d.%d.%d" % version_tuple[:3]
+    version = "%d.%d.%d" % VERSION[:3]
 
 with io.open('./README.rst', encoding='utf-8') as f:
     readme = f.read()
