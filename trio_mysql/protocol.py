@@ -3,7 +3,6 @@
 
 from __future__ import print_function
 from .charset import MBLENGTH
-from ._compat import PY2, range_type
 from .constants import FIELD_TYPE, SERVER_STATUS
 from . import err
 from .util import byte2int
@@ -37,7 +36,7 @@ def dump_packet(data):  # pragma: no cover
         print("-" * 66)
     except ValueError:
         pass
-    dump_data = [data[i:i+16] for i in range_type(0, min(len(data), 256), 16)]
+    dump_data = [data[i:i+16] for i in range(0, min(len(data), 256), 16)]
     for d in dump_data:
         print(' '.join("{:02X}".format(byte2int(x)) for x in d) +
               '   ' * (16 - len(d)) + ' ' * 2 +
@@ -108,16 +107,10 @@ class MysqlPacket(object):
         """
         return self._data[position:(position+length)]
 
-    if PY2:
-        def read_uint8(self):
-            result = ord(self._data[self._position])
-            self._position += 1
-            return result
-    else:
-        def read_uint8(self):
-            result = self._data[self._position]
-            self._position += 1
-            return result
+    def read_uint8(self):
+        result = self._data[self._position]
+        self._position += 1
+        return result
 
     def read_uint16(self):
         result = struct.unpack_from('<H', self._data, self._position)[0]

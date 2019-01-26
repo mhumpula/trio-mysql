@@ -1,7 +1,6 @@
 """
 Implements auth methods
 """
-from ._compat import text_type, PY2
 from .constants import CLIENT
 from .err import OperationalError
 from .util import byte2int, int2byte
@@ -47,8 +46,6 @@ def scramble_native_password(password, message):
 
 def _my_crypt(message1, message2):
     result = bytearray(message1)
-    if PY2:
-        message2 = bytearray(message2)
 
     for i in range(len(result)):
         result[i] ^= message2[i]
@@ -126,7 +123,6 @@ def _roundtrip(conn, send_data):
 
 def _xor_password(password, salt):
     password_bytes = bytearray(password)
-    salt = bytearray(salt)  # for PY2 compat.
     salt_len = len(salt)
     for i in range(len(password_bytes)):
         password_bytes[i] ^= salt[i % salt_len]
@@ -197,8 +193,6 @@ def scramble_caching_sha2(password, nonce):
     p3 = hashlib.sha256(p2 + nonce).digest()
 
     res = bytearray(p1)
-    if PY2:
-        p3 = bytearray(p3)
     for i in range(len(p3)):
         res[i] ^= p3[i]
 

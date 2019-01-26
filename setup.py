@@ -17,7 +17,6 @@ setup(
     url='https://github.com/python-trio/trio-mysql/',
     author='Matthias Urlichs',
     author_email='matthias@urlichs.de',
-    url='https://github.com/PyMySQL/PyMySQL/',
     project_urls={
         "Documentation": "https://trio_mysql.readthedocs.io/",
     },

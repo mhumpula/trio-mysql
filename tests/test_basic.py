@@ -329,7 +329,6 @@ PRIMARY KEY (id)
 """)
 
     async def _verify_records(self, data):
-    def _verify_records(self, data):
         conn = await self.connect()
         cursor = conn.cursor()
         await cursor.execute("SELECT id, name, age, height from bulkinsert")

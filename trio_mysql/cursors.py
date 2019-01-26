@@ -460,8 +460,6 @@ class SSCursor(Cursor):
         finally:
             self.connection = None
 
-    __del__ = close
-
     async def _query(self, q):
         conn = self._get_db()
         self._last_executed = q

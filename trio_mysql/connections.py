@@ -246,7 +246,7 @@ class Connection(object):
         self.port = port or 3306
         self.user = user or DEFAULT_USER
         self.password = password or b""
-        if isinstance(self.password, text_type):
+        if isinstance(self.password, str):
             self.password = self.password.encode('latin1')
         self.db = database
         self.unix_socket = unix_socket
@@ -600,6 +600,7 @@ class Connection(object):
                         raise NotImplementedError("We can't do that yet")
                         # kwargs['source_address'] = (self.bind_address, 0)
                     with trio.fail_after(self.connect_timeout):
+                        import pdb;pdb.set_trace()
                         sock = await trio.open_tcp_stream(self.host, self.port)
                     self.host_info = "socket %s:%d" % (self.host, self.port)
                     if DEBUG: print('connected using socket')
