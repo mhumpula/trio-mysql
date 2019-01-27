@@ -27,6 +27,8 @@ if [ ! -z "${DB}" ]; then
         docker logs --tail 5 mysqld
     done
 
+    echo -e "[client]\nhost = 127.0.0.1\nprotocol = TCP\n" > "${HOME}"/.my.cnf
+
     mysql -e 'select VERSION()'
 
     if [ $DB == 'mysql:8.0' ]; then
@@ -50,9 +52,7 @@ if [ ! -z "${DB}" ]; then
     else
         WITH_PLUGIN=''
     fi
-    mysql -S /tmp/mysql.sock -u root -e "create user travis@localhost; create user travis@'%'; grant all on *.* to  travis@localhost WITH GRANT OPTION;grant all on *.* to  travis@'%' WITH GRANT OPTION;"
-    sed -e 's/3306/3307/g' -e 's:/var/run/mysqld/mysqld.sock:/tmp/mysql.sock:g' .travis/database.json > tests/databases.json
-    echo -e "[client]\nsocket = /tmp/mysql.sock\n" > "${HOME}"/.my.cnf
+    mysql -u root -e "create user travis@localhost; create user travis@'%'; grant all on *.* to  travis@localhost WITH GRANT OPTION;grant all on *.* to  travis@'%' WITH GRANT OPTION;"
 
     cp .travis/docker.json tests/databases.json
 else
