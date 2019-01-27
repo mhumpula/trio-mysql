@@ -8,6 +8,14 @@ import warnings
 import trio_mysql
 from trio_mysql._compat import CPYTHON
 
+testdb_host = os.environ.get("TESTDB_HOST", "localhost")
+# TODO: some tests fail if this is not 'localhost'
+testdb_port = int(os.environ.get("TESTDB_PORT", "3306"))
+testdb_user = os.environ.get("TESTDB_USER", "root")
+testdb_pass = os.environ.get("TESTDB_PASS", "")
+testdb_db = os.environ.get("TESTDB_DB", "test_trio_mysql")
+# also needs testdb2 and testdb3
+
 class FakeUnittestcase:
     def assertEqual(self, a,b,r=None):
         assert a == b, (a,b,r)
@@ -25,15 +33,26 @@ class FakeUnittestcase:
 class TrioMySQLTestCase(FakeUnittestcase):
     # You can specify your test environment creating a file named
     #  "databases.json" or editing the `databases` variable below.
+
+    connections = None
+
     fname = os.path.join(os.path.dirname(__file__), "databases.json")
     if os.path.exists(fname):
         with open(fname) as f:
             databases = json.load(f)
     else:
         databases = [
-            {"host":"localhost","user":"root",
-             "passwd":"","db":"test_trio_mysql", "use_unicode": True, 'local_infile': True},
-            {"host":"localhost","user":"root","passwd":"","db":"test_trio_mysql2"}]
+            {"host":testdb_host, "port":testdb_port, "user":testdb_user, "passwd":testdb_pass,
+             "db":testdb_db, "use_unicode": True, 'local_infile': True},
+            {"host":testdb_host, "port":testdb_port, "user":testdb_user, "passwd":testdb_pass,
+             "db": testdb_db+"2"}]
+
+    async def setUp(self):
+        self.connections = []
+        for params in self.databases:
+            conn = trio_mysql.connect(**params)
+            await conn.connect()
+            self.connections.append(conn)
 
     def mysql_server_is(self, conn, version_tuple):
         """Return True if the given connection is on the version given or
@@ -52,31 +71,20 @@ class TrioMySQLTestCase(FakeUnittestcase):
         )
         return server_version_tuple >= version_tuple
 
-    _connections = None
-
-    @property
-    async def connections(self):
-        if self._connections is None:
-            self._connections = []
-            for params in self.databases:
-                conn = trio_mysql.connect(**params)
-                await conn.connect()
-                self._connections.append(conn)
-        return self._connections
-
     async def connect(self, **params):
         p = self.databases[0].copy()
         p.update(params)
         conn = trio_mysql.connect(**p)
         await conn.connect()
-        self._connections.append(conn)
+        self.connections.append(conn)
+        return conn
 
     async def tearDown(self):
-        if self._connections:
-            for connection in self._connections:
+        if self.connections:
+            for connection in self.connections:
                 if connection.open:
                     await connection.aclose()
-            self._connections = None
+            self.connections = None
 
     async def safe_create_table(self, connection, tablename, ddl, cleanup=True):
         """create a table.

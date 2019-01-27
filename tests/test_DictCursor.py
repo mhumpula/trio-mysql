@@ -16,7 +16,7 @@ class TestDictCursor(base.TrioMySQLTestCase):
 
     async def setUp(self):
         await super().setUp()
-        self.conn = conn = self.connect()
+        self.conn = conn = await self.connect()
         c = conn.cursor(self.cursor_type)
 
         # create a table ane some data to query

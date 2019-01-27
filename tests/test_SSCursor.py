@@ -1,7 +1,7 @@
 import sys
 import pytest
 
-from trio_mysql.tests import base
+from . import base
 import trio_mysql.cursors
 from trio_mysql.constants import CLIENT
 
@@ -11,7 +11,7 @@ class TestSSCursor(base.TrioMySQLTestCase):
         await set_me_up(self)
         affected_rows = None # was: 18446744073709551615
 
-        conn = self.connect(client_flag=CLIENT.MULTI_STATEMENTS)
+        conn = await self.connect(client_flag=CLIENT.MULTI_STATEMENTS)
         data = [
             ('America', '', 'America/Jamaica'),
             ('America', '', 'America/Los_Angeles'),
@@ -24,9 +24,11 @@ class TestSSCursor(base.TrioMySQLTestCase):
             ('America', '', 'America/Denver'),
             ('America', '', 'America/Detroit'),]
 
-        cursor = conn.cursor(pymysql.cursors.SSCursor)
+        cursor = conn.cursor(trio_mysql.cursors.SSCursor)
 
         # Create table
+        await cursor.execute('DROP TABLE IF EXISTS tz_data')
+
         await cursor.execute('CREATE TABLE tz_data ('
             'region VARCHAR(64),'
             'zone VARCHAR(64),'
@@ -98,7 +100,7 @@ class TestSSCursor(base.TrioMySQLTestCase):
             self.assertFalse(cursor.nextset())
 
         cursor.execute('DROP TABLE IF EXISTS tz_data')
-        cursor.close()
+        await cursor.aclose()
 
 __all__ = ["TestSSCursor"]
 

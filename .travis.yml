@@ -40,7 +40,7 @@ matrix:
 # really only need libaio1 for DB builds however libaio-dev is whitelisted for container builds and liaio1 isn't
 install:
   - export PASSWORD=travis;
-  - pip install -U coveralls unittest2 coverage cryptography pytest pytest-cov pytest-trio
+  - pip install -U coveralls unittest2 coverage cryptography pytest pytest-cov pytest-trio trustme
 
 before_script:
   - ./.travis/initializedb.sh

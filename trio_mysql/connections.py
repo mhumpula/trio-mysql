@@ -497,20 +497,6 @@ class Connection(object):
             return cursor(self)
         return self.cursorclass(self)
 
-    def __enter__(self):
-        """Context manager that returns a Cursor"""
-        warnings.warn(
-            "Context manager API of Connection object is deprecated; Use conn.begin()",
-            DeprecationWarning)
-        return self.cursor()
-
-    def __exit__(self, exc, value, traceback):
-        """On successful exit, commit. On exception, rollback"""
-        if exc:
-            self.rollback()
-        else:
-            self.commit()
-
     # The following methods are INTERNAL USE ONLY (called from Cursor)
     async def query(self, sql, unbuffered=False):
         # if DEBUG:
@@ -566,16 +552,20 @@ class Connection(object):
         self.encoding = encoding
 
     def __enter__(self):
-        raise RuntimeError("You must use __aenter__")
+        raise RuntimeError("You must use 'async with'.")
 
     def __exit__(self):
-        raise RuntimeError("You must use __aenter__")
+        raise RuntimeError("You must use 'async with'.")
 
     async def __aenter__(self):
         if self._closed:
             await self.connect()
             return self
+
         if self._curs is None:
+            warnings.warn(
+                "Deprecated. Be explicit and use 'async with conn.cursor()'.",
+                DeprecationWarning)
             self._curs = self.cursor()
             try:
                 return await self._curs.__aenter__()
@@ -600,7 +590,6 @@ class Connection(object):
                         raise NotImplementedError("We can't do that yet")
                         # kwargs['source_address'] = (self.bind_address, 0)
                     with trio.fail_after(self.connect_timeout):
-                        import pdb;pdb.set_trace()
                         sock = await trio.open_tcp_stream(self.host, self.port)
                     self.host_info = "socket %s:%d" % (self.host, self.port)
                     if DEBUG: print('connected using socket')

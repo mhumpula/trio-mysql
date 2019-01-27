@@ -111,7 +111,7 @@ class TestConversion(base.TrioMySQLTestCase):
         async with conn.cursor() as c:
             await c.execute("insert into test_binary (b) values (_binary %s)", (data,))
             await c.execute("select b from test_binary")
-            self.assertEqual(data, c.fetchone()[0])
+            self.assertEqual(data, (await c.fetchone())[0])
 
     @pytest.mark.trio
     async def test_blob(self, set_me_up):
@@ -125,7 +125,7 @@ class TestConversion(base.TrioMySQLTestCase):
         async with conn.cursor() as c:
             await c.execute("insert into test_blob (b) values (_binary %s)", (data,))
             await c.execute("select b from test_blob")
-            self.assertEqual(data, c.fetchone()[0])
+            self.assertEqual(data, (await c.fetchone())[0])
 
     @pytest.mark.trio
     async def test_untyped(self, set_me_up):
@@ -334,6 +334,7 @@ PRIMARY KEY (id)
         await cursor.execute("SELECT id, name, age, height from bulkinsert")
         result = await cursor.fetchall()
         self.assertEqual(sorted(data), sorted(result))
+        await conn.aclose()
 
     @pytest.mark.trio
     async def test_bulk_insert(self, set_me_up):
