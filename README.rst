@@ -89,39 +89,44 @@ The following examples make use of a simple table
 
 .. code:: python
 
-    import trio_mysql.cursors
+    import trio
+    import trio_mysql
+    import trio_mysql.cursors 
 
-    # Connect to the database
     connection = trio_mysql.connect(host='localhost',
-                                 user='user',
-                                 password='passwd',
-                                 db='db',
-                                 charset='utf8mb4',
-                                 cursorclass=trio_mysql.cursors.DictCursor)
+                                    user='user',
+                                    password='passwd',
+                                    db='db',
+                                    charset='utf8mb4',
+                                    cursorclass=trio_mysql.cursors.DictCursor)
 
-    async with connection as conn:
-        async with conn.cursor() as cursor:
-            # Create a new record
-            sql = "INSERT INTO `users` (`email`, `password`) VALUES (%s, %s)"
-            await cursor.execute(sql, ('webmaster@python.org', 'very-secret'))
-
-        # connection is not autocommit by default. So you must commit to save
-        # your changes.
-        conn.commit()
-
-        # Alternately, you can set up a transaction:
-        async with conn.transaction():
+    async def main():
+        async with connection as conn:
             async with conn.cursor() as cursor:
                 # Create a new record
                 sql = "INSERT INTO `users` (`email`, `password`) VALUES (%s, %s)"
-                await cursor.execute(sql, ('webmistress@python.org', 'totally-secret'))
+                await cursor.execute(sql, ('webmaster@python.org', 'very-secret'))
 
-        async with conn.cursor() as cursor:
-            # Read a single record
-            sql = "SELECT `id`, `password` FROM `users` WHERE `email`=%s"
-            await cursor.execute(sql, ('webmaster@python.org',))
-            result = await cursor.fetchone()
-            print(result)
+            # Connection is not autocommit by default. So you must commit to save
+            # your changes.
+            await conn.commit()
+
+            # Alternately, you can set up a transaction:
+            async with conn.transaction():
+                async with conn.cursor() as cursor:
+                    # Create a new record
+                    sql = "INSERT INTO `users` (`email`, `password`) VALUES (%s, %s)"
+                    await cursor.execute(sql, ('webmistress@python.org', 'totally-secret'))
+
+            async with conn.cursor() as cursor:
+                # Read a single record
+                sql = "SELECT `id`, `password` FROM `users` WHERE `email`=%s"
+                await cursor.execute(sql, ('webmaster@python.org',))
+                result = await cursor.fetchone()
+                print(result)
+
+    trio.run(main)
+
 
 This example will print:
 
