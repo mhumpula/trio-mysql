@@ -114,9 +114,9 @@ def _hash_password_323(password):
 # sha256_password
 
 
-def _roundtrip(conn, send_data):
-    conn.write_packet(send_data)
-    pkt = conn._read_packet()
+async def _roundtrip(conn, send_data):
+    await conn.write_packet(send_data)
+    pkt = await conn._read_packet()
     pkt.check_error()
     return pkt
 
@@ -148,12 +148,12 @@ def sha2_rsa_encrypt(password, salt, public_key):
     )
 
 
-def sha256_password_auth(conn, pkt):
+async def sha256_password_auth(conn, pkt):
     if conn._secure:
         if DEBUG:
             print("sha256: Sending plain password")
         data = conn.password + b'\0'
-        return _roundtrip(conn, data)
+        return await _roundtrip(conn, data)
 
     if pkt.is_auth_switch_request():
         conn.salt = pkt.read_all()
@@ -161,7 +161,7 @@ def sha256_password_auth(conn, pkt):
             # Request server public key
             if DEBUG:
                 print("sha256: Requesting server public key")
-            pkt = _roundtrip(conn, b'\1')
+            pkt = await _roundtrip(conn, b'\1')
 
     if pkt.is_extra_auth_data():
         conn.server_public_key = pkt._data[1:]
@@ -176,7 +176,7 @@ def sha256_password_auth(conn, pkt):
     else:
         data = b''
 
-    return _roundtrip(conn, data)
+    return await _roundtrip(conn, data)
 
 
 def scramble_caching_sha2(password, nonce):
@@ -199,10 +199,10 @@ def scramble_caching_sha2(password, nonce):
     return bytes(res)
 
 
-def caching_sha2_password_auth(conn, pkt):
+async def caching_sha2_password_auth(conn, pkt):
     # No password fast path
     if not conn.password:
-        return _roundtrip(conn, b'')
+        return await _roundtrip(conn, b'')
 
     if pkt.is_auth_switch_request():
         # Try from fast auth
@@ -210,7 +210,7 @@ def caching_sha2_password_auth(conn, pkt):
             print("caching sha2: Trying fast path")
         conn.salt = pkt.read_all()
         scrambled = scramble_caching_sha2(conn.password, conn.salt)
-        pkt = _roundtrip(conn, scrambled)
+        pkt = await _roundtrip(conn, scrambled)
     # else: fast auth is tried in initial handshake
 
     if not pkt.is_extra_auth_data():
@@ -242,10 +242,10 @@ def caching_sha2_password_auth(conn, pkt):
     if conn._secure:
         if DEBUG:
             print("caching sha2: Sending plain password via secure connection")
-        return _roundtrip(conn, conn.password + b'\0')
+        return await _roundtrip(conn, conn.password + b'\0')
 
     if not conn.server_public_key:
-        pkt = _roundtrip(conn, b'\x02')  # Request public key
+        pkt = await _roundtrip(conn, b'\x02')  # Request public key
         if not pkt.is_extra_auth_data():
             raise OperationalError(
                 "caching sha2: Unknown packet for public key: %s" % pkt._data[:1]
@@ -256,4 +256,4 @@ def caching_sha2_password_auth(conn, pkt):
             print(conn.server_public_key.decode('ascii'))
 
     data = sha2_rsa_encrypt(conn.password, conn.salt, conn.server_public_key)
-    pkt = _roundtrip(conn, data)
+    pkt = await _roundtrip(conn, data)
