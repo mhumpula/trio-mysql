@@ -54,7 +54,7 @@ if [ ! -z "${DB}" ]; then
     sed -e 's/3306/3307/g' -e 's:/var/run/mysqld/mysqld.sock:/tmp/mysql.sock:g' .travis/database.json > tests/databases.json
     echo -e "[client]\nsocket = /tmp/mysql.sock\n" > "${HOME}"/.my.cnf
 
-    cp .travis/docker.json trio-mysql/tests/databases.json
+    cp .travis/docker.json tests/databases.json
 else
     cat ~/.my.cnf
 
