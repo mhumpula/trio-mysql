@@ -805,7 +805,7 @@ class Connection(object):
         if self.ssl and self.server_capabilities & CLIENT.SSL:
             await self.write_packet(data_init)
 
-            self._sock = trio.ssl.SSLStream(self._sock, self.ctx, server_hostname=self.host)
+            self._sock = trio.SSLStream(self._sock, self.ctx, server_hostname=self.host)
             await self._sock.do_handshake()
             self._secure = True
 
