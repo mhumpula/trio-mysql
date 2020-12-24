@@ -884,9 +884,9 @@ class Connection(object):
                 print("received extra data")
             # https://dev.mysql.com/doc/internals/en/successful-authentication.html
             if self._auth_plugin_name == "caching_sha2_password":
-                auth_packet = _auth.caching_sha2_password_auth(self, auth_packet)
+                auth_packet = await _auth.caching_sha2_password_auth(self, auth_packet)
             elif self._auth_plugin_name == "sha256_password":
-                auth_packet = _auth.sha256_password_auth(self, auth_packet)
+                auth_packet = await _auth.sha256_password_auth(self, auth_packet)
             else:
                 raise err.OperationalError("Received extra packet for auth method %r", self._auth_plugin_name)
 
