@@ -27,7 +27,7 @@ class TestOldIssues(base.TrioMySQLTestCase):
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore")
             await c.execute("drop table if exists issue3")
-        await c.execute("create table issue3 (d date, t time, dt datetime, ts timestamp)")
+        await c.execute("create table issue3 (d date, t time, dt datetime, ts timestamp NULL DEFAULT NULL)")
         try:
             await c.execute("insert into issue3 (d, t, dt, ts) values (%s,%s,%s,%s)", (None, None, None, None))
             await c.execute("select d from issue3")
@@ -37,7 +37,7 @@ class TestOldIssues(base.TrioMySQLTestCase):
             await c.execute("select dt from issue3")
             self.assertEqual(None, (await c.fetchone())[0])
             await c.execute("select ts from issue3")
-            self.assertTrue(isinstance((await c.fetchone())[0], datetime.datetime))
+            self.assertEqual(None, (await c.fetchone())[0])
         finally:
             await c.execute("drop table issue3")
 
