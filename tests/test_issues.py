@@ -502,32 +502,28 @@ class TestGitHubIssues(base.TrioMySQLTestCase):
             "ENGINE=MyISAM default charset=utf8")
 
         cur = conn.cursor()
-        query = ("INSERT INTO issue363 (id, geom) VALUES"
-                 "(1998, GeomFromText('LINESTRING(1.1 1.1,2.2 2.2)'))")
-        # From MySQL 5.7, ST_GeomFromText is added and GeomFromText is deprecated.
         if self.mysql_server_is(conn, (5, 7, 0)):
-            with self.assertWarns(trio_mysql.err.Warning) as cm:
-                await cur.execute(query)
+            fn_geom_from_text = 'ST_GeomFromText'
+            fn_as_text = 'ST_AsText'
+            fn_as_binary = 'ST_AsBinary'
         else:
-            await cur.execute(query)
+            fn_geom_from_text = 'GeomFromText'
+            fn_as_text = 'AsText'
+            fn_as_binary = 'AsBinary'
+
+        query = (f"INSERT INTO issue363 (id, geom) VALUES"
+                 f"(1998, {fn_geom_from_text}('LINESTRING(1.1 1.1,2.2 2.2)'))")
+        await cur.execute(query)
 
         # select WKT
-        query = "SELECT AsText(geom) FROM issue363"
-        if self.mysql_server_is(conn, (5, 7, 0)):
-            with self.assertWarns(trio_mysql.err.Warning) as cm:
-                await cur.execute(query)
-        else:
-            await cur.execute(query)
+        query = f"SELECT {fn_as_text}(geom) FROM issue363"
+        await cur.execute(query)
         row = await cur.fetchone()
         self.assertEqual(row, ("LINESTRING(1.1 1.1,2.2 2.2)", ))
 
         # select WKB
-        query = "SELECT AsBinary(geom) FROM issue363"
-        if self.mysql_server_is(conn, (5, 7, 0)):
-            with self.assertWarns(trio_mysql.err.Warning) as cm:
-                await cur.execute(query)
-        else:
-            await cur.execute(query)
+        query = f"SELECT {fn_as_binary}(geom) FROM issue363"
+        await cur.execute(query)
         row = await cur.fetchone()
         self.assertEqual(row,
                          (b"\x01\x02\x00\x00\x00\x02\x00\x00\x00"
