@@ -9,8 +9,8 @@ from tests import base
 import pytest
 
 try:
-    import imp
-    reload = imp.reload
+    import importlib
+    reload = importlib.reload
 except AttributeError:
     pass
 

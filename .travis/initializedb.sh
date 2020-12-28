@@ -4,11 +4,9 @@
 set -x
 #verbose
 set -v
+set -e
 
 if [ ! -z "${DB}" ]; then
-    # disable existing database server in case of accidential connection
-    sudo service mysql stop
-
     docker pull ${DB}
     docker run -it --name=mysqld -d -e MYSQL_ALLOW_EMPTY_PASSWORD=yes -p 3306:3306 ${DB}
     sleep 10
@@ -50,20 +48,16 @@ if [ ! -z "${DB}" ]; then
     else
         WITH_PLUGIN=''
     fi
-    mysql -S /tmp/mysql.sock -u root -e "create user travis@localhost; create user travis@'%'; grant all on *.* to  travis@localhost WITH GRANT OPTION;grant all on *.* to  travis@'%' WITH GRANT OPTION;"
-    sed -e 's/3306/3307/g' -e 's:/var/run/mysqld/mysqld.sock:/tmp/mysql.sock:g' .travis/database.json > tests/databases.json
-    echo -e "[client]\nsocket = /tmp/mysql.sock\n" > "${HOME}"/.my.cnf
 
-    cp .travis/docker.json trio-mysql/tests/databases.json
-else
-    cat ~/.my.cnf
-
-    mysql -e 'select VERSION()'
-    mysql -e 'create database test_trio_mysql DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;'
+    mysql -e 'create database test_trio_mysql  DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;'
     mysql -e 'create database test_trio_mysql2 DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;'
+    mysql -u root -e "create user travis_pass identified by 'some password'; grant all on test_trio_mysql2.* to travis_pass;"
+    mysql -u root -e "create user travis_pass@localhost identified by 'some password'; grant all on test_trio_mysql2.* to travis_pass@localhost;"
+    mysql -u travis_pass -p'some password' -e 'show databases'
+    mysql -e 'select VERSION()'
 
-    mysql -u root -e "create user test2           identified by 'some password'; grant all on test_trio_mysql2.* to test2;"
-    mysql -u root -e "create user test2@localhost identified by 'some password'; grant all on test_trio_mysql2.* to test2@localhost;"
-
-    cp .travis/database.json tests/databases.json
+    cp .travis/docker.json tests/databases.json
+else
+    echo 'required ${DB} variable unset'
+    exit 1
 fi
