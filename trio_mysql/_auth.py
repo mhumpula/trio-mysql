@@ -229,7 +229,7 @@ async def caching_sha2_password_auth(conn, pkt):
     if n == 3:
         if DEBUG:
             print("caching sha2: succeeded by fast path.")
-        pkt = conn._read_packet()
+        pkt = await conn._read_packet()
         pkt.check_error()  # pkt must be OK packet
         return pkt
 
